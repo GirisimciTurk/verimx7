@@ -1,0 +1,22 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.pem
+npm-debug.log*
+.env
+.env.local
+.env*.local
+next-env.d.ts
+tsconfig.tsbuildinfo
+.vercel
+
+# Kaynak tasarım arşivi — repoda tutulmaz
+*.zip
+
+# Kaynak tasarım arşivi ve gizli belgeler repoda tutulmaz.
+# belgeler/ içinde "Gizlidir" ibareli iş planı ve yatırımcı sunumu ile
+# kişisel bir sertifika var; bunlar kod deposunda saklanmaz.
+# Mimari-Plan.md'ye koddaki yorumlardan atıf yapılıyor ama içeriği de gizli.
+belgeler/

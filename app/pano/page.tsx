@@ -207,7 +207,7 @@ export default function DashboardPage() {
             gerçek bir müşteriye ait değildir. İzleme aboneliğinde panonun ne gösterdiğini
             anlatmak için hazırlanmıştır. Kendi kurumunuz için{" "}
             <Link href={`${ROUTES.home}#${SECTIONS.basvuru}`}>değerlendirme başvurusu</Link>{" "}
-            yapabilir veya <Link href={ROUTES.test}>Atıl Kapasite Testini</Link>{" "}
+            yapabilir veya <Link href={ROUTES.test}>Verim Simülasyonunu</Link>{" "}
             çalıştırabilirsiniz.
           </span>
         </div>
@@ -514,7 +514,7 @@ export default function DashboardPage() {
               Aboneliğe geçmek için başvurun
             </Link>
             <Link href={ROUTES.test} style={{ color: "var(--color-accent-300)", fontSize: 14 }}>
-              Testi çalıştır
+              Simülasyonu çalıştır
             </Link>
           </div>
         </section>

@@ -3,20 +3,29 @@ import Image from "next/image";
 import Link from "next/link";
 
 import ApplicationForm from "@/components/ApplicationForm";
+import CaseStudy from "@/components/CaseStudy";
+import Comparison from "@/components/Comparison";
 import HashAnchor from "@/components/HashAnchor";
 import HeroTyping from "@/components/HeroTyping";
 import QuickEstimate from "@/components/QuickEstimate";
+import ReportPreview from "@/components/ReportPreview";
+import SideForm from "@/components/SideForm";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNav from "@/components/SiteNav";
 import TiltImage from "@/components/TiltImage";
 import { quickEstimate } from "@/lib/engine";
+import { QUICK_LIMITS } from "@/lib/form-constants";
 import { BRAND, CLAIMS, ROUTES, SECTIONS, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: ROUTES.home },
 };
 
-const QUICK_DEFAULTS = { emp: 320, revenueMn: 850, cost: 62_000 };
+const QUICK_DEFAULTS = {
+  emp: QUICK_LIMITS.emp.default,
+  revenueMn: QUICK_LIMITS.revenueMn.default,
+  cost: QUICK_LIMITS.cost.default,
+};
 
 /** Ne yapıyoruz — beş verimetri alanı. */
 const AREAS = [
@@ -52,7 +61,7 @@ const AREAS = [
   },
 ] as const;
 
-/** Verimx7 modeli — yedi katman. */
+/** Verimx7 modeli — yedi katman (yedincisi ayrı kartta). */
 const LAYERS = [
   "Envanter çıkarma",
   "Gizli kapasite analizi",
@@ -73,38 +82,110 @@ const STAGES: readonly { time: string; name: string; highlight?: boolean }[] = [
   { time: "sürekli", name: "İzleme" },
 ] as const;
 
-/** Ölçüm mimarisi — temsili örnek. Gerçek bir müşteri vakası değildir. */
-const EXAMPLE_METRICS = [
-  { name: "Toplantı yükü oranı", from: "%18,4", to: "%12,1", width: "66%" },
-  { name: "Süreç döngü süresi", from: "11,6 gün", to: "7,9 gün", width: "68%" },
-  { name: "Yeniden yapılan iş", from: "%9,2", to: "%6,4", width: "70%" },
+/** Artış yoksa prim yok — dört ilke. */
+const RISK_CARDS = [
+  { head: "Sabit", title: "Teşhis ücreti", body: "Beş günde rapor. Sonuç beğenilmezse süreç orada biter." },
+  { head: "Primli", title: "Uygulama bedeli", body: "Ağırlığı doğrulanan artışa bağlı başarı primidir." },
+  { head: "Formül", title: "Sözleşme eki", body: "Baz dönem, metrik ve hesap yöntemi imza öncesi yazılır." },
 ] as const;
 
-const ROLES = [
+/** Kapsam — üç aşama. */
+const PACKAGES = [
   {
-    initials: "MD",
-    title: "Metodoloji direktörü",
-    body: "Yöntemin sahibi, ölçüm formülleri, kalite",
-    meta: "Organizasyon tasarımı",
+    stage: "Aşama 1",
+    title: "Teşhis",
+    time: "5 gün",
+    items: ["Kaynak envanteri", "Kayıp haritası", "Aksiyon listesi", "Ölçüm protokolü"],
+    note: "Tek başına alınabilir.",
   },
   {
-    initials: "PL",
-    title: "Proje lideri",
-    body: "Tek projenin uçtan uca yürütülmesi",
-    meta: "Müşteri yönetimi",
+    stage: "Aşama 2",
+    title: "Uygulama",
+    time: "3–6 ay",
+    items: [
+      "Aksiyonların yürütülmesi",
+      "Birim liderleriyle haftalık ritim",
+      "Kaynak yeniden eşleştirme",
+      "Doğrulama ölçümü",
+    ],
+    note: "Bedelin ağırlığı başarı primi.",
+    highlight: true,
   },
   {
-    initials: "KD",
-    title: "Kıdemli danışman",
-    body: "Teşhis ve uygulama",
-    meta: "Süreç iyileştirme",
+    stage: "Aşama 3",
+    title: "İzleme",
+    time: "abonelik",
+    items: ["Aylık veri akışı", "Eşik aşımı uyarıları", "Çeyreklik gözden geçirme"],
+  },
+] as const;
+
+/** Kimler için çalışıyoruz. */
+const AUDIENCES = [
+  { head: "Kamu", body: "Bakanlıklar ve bağlı kurumlar" },
+  { head: "Yerel", body: "Belediyeler ve iştirakleri" },
+  { head: "Sanayi", body: "Üretim tesisleri ve holdingler" },
+  { head: "Tarım", body: "Arazi ve doğal kaynak işletmeleri" },
+  { head: "PPP", body: "Kamu–özel ortaklıkları" },
+] as const;
+
+/** "Masaya genelde şu üç cümleyle geliyorlar." */
+const SITUATIONS = [
+  {
+    quote: "“Ekip yetmiyor, kadro büyütmemiz gerek.”",
+    body: "Önce mevcut kadronun ne kadarının asıl işe gittiğini ölçüyoruz. Onay katmanı ve toplantı yükü çıktığında genelde kadro yetiyor.",
+    src: "/img/verim3.jpg",
+    alt: "Toplantı masası etrafında verimlilik grafiklerini tartışan ekip",
   },
   {
-    initials: "VA",
-    title: "Veri analisti",
-    body: "Veri hattı, metrik hesaplama, panolar",
-    meta: "SQL, Python",
+    quote: "“Kapasiteyi artırmak için yeni yatırım şart.”",
+    body: "Mevcut hattın gerçek etkinliğini ölçüyoruz. Duruş ve hazırlık kayıpları alındığında yatırım kararı çoğu zaman erteleniyor.",
+    src: "/img/sanayi.jpg",
+    alt: "Ağır sanayi tesisinde bakım yapan teknisyen ve büyük dişli grubu",
   },
+  {
+    quote: "“Verimsizlik var ama nerede olduğunu bilmiyoruz.”",
+    body: "Beş günde kayıp haritası çıkıyor: hangi süreçte, ne kadar, hangi veriye dayanarak. Tartışma oradan sonra somutlaşıyor.",
+    src: "/img/verim2.jpg",
+    alt: "Analiz ekranı önünde kayıp kalemlerini inceleyen uzman",
+  },
+] as const;
+
+/** Sık sorulanlar. %700 maddesi CLAIMS.sevenfold ile birlikte açılır. */
+const FAQ: ReadonlyArray<{ q: string; a: string; claim?: boolean }> = [
+  {
+    q: "Bu gerçekten oluyor mu, yoksa slayt mı kalıyor?",
+    a: "Ölçüm bizim tablomuzdan değil, sizin kendi sisteminizden çıkıyor. Baz dönem sözleşme imzalanmadan donduruluyor, metrik ve formül sözleşme eki oluyor. Doğrulanan artış olmazsa başarı primi tahakkuk etmiyor — iddiayı biz taşıyoruz.",
+  },
+  {
+    q: "%700 nasıl mümkün olabilir?",
+    a: "Tek bir metrikte değil. Bu oran, atıl kaynağın gelirleştirilmesiyle uzun vadede ölçülen toplam katma değeri anlatıyor. Altı aylık uygulama sonunda gördüğümüz tipik bant %12–40’tır; sayfadaki hesap aracı da o bandı kullanıyor.",
+    claim: true,
+  },
+  {
+    q: "Ne kadar sürüyor, ekibimizden ne istiyorsunuz?",
+    a: "Ön görüşme 1 saat, kapsam 3 gün, veri toplama 4 gün, teşhis raporu 5 gün. Uygulama 3–6 ay, doğrulama 2 hafta. Sizden istediğimiz, birim liderlerinin haftada bir saatlik katılımı ve mevcut sistem verisine okuma erişimi.",
+  },
+  {
+    q: "Verimizi kim görecek?",
+    a: "Kişi bazlı kimlik hiçbir tabloda tutulmuyor; en küçük tanecik roldür. Her müşteri için ayrı şema, uçtan uca şifreleme, erişim logu ve proje sonunda imha tutanağı uygulanıyor.",
+  },
+  {
+    q: "Bunu kendi ekibimiz yapamaz mı?",
+    a: "Çoğu kurumda yapabilir. Eksik olan genellikle bilgi değil, ölçüm disiplini ve şablon: baz dönemin dondurulması, kaybın tek tek sahiplendirilmesi ve sonucun aynı formülle yeniden ölçülmesi. İsterseniz yöntemi ekibinize devrediyoruz.",
+  },
+  {
+    q: "Ekip direnç gösterirse ne olur?",
+    a: "Aksiyonlar birim liderleriyle birlikte yazılıyor, tepeden dayatılmıyor. Kişi bazlı performans skoru üretmiyoruz; ölçüm rol ve süreç seviyesinde kalıyor. Direncin en büyük kaynağı olan “bu benim işimi tehdit ediyor” algısını böyle kırıyoruz.",
+  },
+];
+
+const SECURITY_TAGS = [
+  "Veri minimizasyonu",
+  "Rol bazlı toplulaştırma",
+  "Müşteriye özel şema",
+  "Uçtan uca şifreleme",
+  "Erişim logları",
+  "İmha tutanağı",
 ] as const;
 
 /** Arama sonuçlarında hizmetin ne olduğunu anlatan yapılandırılmış veri. */
@@ -121,27 +202,31 @@ const serviceJsonLd = {
     "@type": "OfferCatalog",
     name: "Hizmet portföyü",
     itemListElement: [
-      {
-        "@type": "Offer",
-        itemOffered: { "@type": "Service", name: "Atıl Kapasite Raporu (teşhis)" },
-      },
-      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Uygulama projesi" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Teşhis (5 gün)" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Uygulama (3–6 ay)" } },
       { "@type": "Offer", itemOffered: { "@type": "Service", name: "İzleme aboneliği" } },
     ],
   },
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.filter((f) => !f.claim || CLAIMS.sevenfold).map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
 export default function HomePage() {
-  const quick = quickEstimate(
-    QUICK_DEFAULTS.emp,
-    QUICK_DEFAULTS.revenueMn,
-    QUICK_DEFAULTS.cost,
-  );
+  const quick = quickEstimate(QUICK_DEFAULTS.emp, QUICK_DEFAULTS.revenueMn, QUICK_DEFAULTS.cost);
 
   return (
     <>
       <HashAnchor />
       <SiteNav />
+      <SideForm />
 
       <main id="icerik">
         {/* ── Başlık ────────────────────────────────────────────────── */}
@@ -150,15 +235,7 @@ export default function HomePage() {
             {BRAND} Teknolojileri
           </span>
           <HeroTyping />
-          <p
-            style={{
-              fontSize: 20,
-              lineHeight: 1.5,
-              maxWidth: "30em",
-              color: "var(--color-neutral-800)",
-              margin: 0,
-            }}
-          >
+          <p style={{ fontSize: 20, lineHeight: 1.5, maxWidth: "30em", color: "var(--color-neutral-800)", margin: 0 }}>
             İnsan, mekân, makine, teknoloji ve doğal kaynaklarda ölçülebilir verim artışı
           </p>
         </section>
@@ -170,8 +247,8 @@ export default function HomePage() {
             initial={{ ratio: quick.ratio, value: quick.value, payroll: quick.payroll }}
           />
           <TiltImage
-            src="/img/ortam.jpg"
-            alt="Şehir planlama ve yenilik merkezinde veri duvarını inceleyen ekip"
+            src="/img/genel_uretim.jpg"
+            alt="Üretim tesisi ve lojistik akışını gösteren kurumsal saha görünümü"
             priority
           />
         </section>
@@ -180,12 +257,7 @@ export default function HomePage() {
         <section className="lp-sec" style={{ paddingTop: 0, paddingBottom: 0 }}>
           <div
             className="washed"
-            style={{
-              position: "relative",
-              height: 380,
-              borderRadius: "var(--radius-lg)",
-              overflow: "hidden",
-            }}
+            style={{ position: "relative", height: 380, borderRadius: "var(--radius-lg)", overflow: "hidden" }}
           >
             <Image
               src="/img/genel_uretim.jpg"
@@ -205,44 +277,18 @@ export default function HomePage() {
                 Değer önerisi
               </p>
               <p style={{ fontSize: 28, lineHeight: 1.3, maxWidth: "22em", margin: 0 }}>
-                Sektör gözlemine dayalı çalışma varsayımımıza göre personel maliyetinin
-                %15&ndash;30&rsquo;u çıktı üretmeyen faaliyete gidiyor. Biz o kısmı katma
-                değere çeviriyoruz.
-              </p>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--color-neutral-700)",
-                  marginTop: "var(--space-4)",
-                  maxWidth: "34em",
-                }}
-              >
-                Bu aralık henüz doğrulanmamış bir çalışma varsayımıdır (İş Planı §2.3);
-                her kurumda kendi sistem verisiyle yeniden hesaplanır ve ölçülen sonuç
-                sözleşme ekindeki formülle raporlanır.
+                Kurumların kaynaklarının %30–60&rsquo;ı atıl. Biz o kısmı katma değere
+                çeviriyoruz.
               </p>
             </div>
             <div style={{ display: "grid", gap: "var(--space-4)" }}>
-              {/*
-                SEVENFOLD_STAT — lib/site.ts içindeki CLAIMS.sevenfold ile açılır.
-                Açmadan önce: hangi metrikte, hangi paydada ve hangi baz döneme
-                göre 7 kat olduğu aşağıdaki metne yazılmalı ve ham ölçüm dosyası
-                ibraz edilebilir durumda olmalıdır (İş Planı §8.3).
-              */}
+              {/* %700 — lib/site.ts içindeki CLAIMS.sevenfold ile açılıp kapanır. */}
               {CLAIMS.sevenfold && (
                 <div>
-                  <div className="stat-v">7 kat</div>
-                  <div className="stat-l">
-                    hedeflenen verim artışı<sup>*</sup>
-                  </div>
+                  <div className="stat-v">%700</div>
+                  <div className="stat-l">hedeflenen verim artışı</div>
                 </div>
               )}
-              <div>
-                <div className="stat-v">%15&ndash;30</div>
-                <div className="stat-l">
-                  personel maliyetindeki atıl pay<sup>*</sup>
-                </div>
-              </div>
               <div>
                 <div className="stat-v" style={{ color: "var(--color-accent-2-600)" }}>
                   5 gün
@@ -253,18 +299,6 @@ export default function HomePage() {
                 <div className="stat-v">7</div>
                 <div className="stat-l">katmanlı model</div>
               </div>
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "var(--color-neutral-700)",
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                <sup>*</sup> Doğrulanmamış çalışma varsayımıdır, taahhüt değildir. Her
-                projede ulaşılan sonuç sözleşme ekindeki formülle hesaplanır ve
-                müşterinin kendi doğrulayıcısı tarafından onaylanır.
-              </p>
             </div>
           </div>
         </section>
@@ -284,16 +318,9 @@ export default function HomePage() {
             <h2 className="lp-h2" style={{ margin: 0 }}>
               Ne yapıyoruz?
             </h2>
-            <p
-              style={{
-                margin: 0,
-                maxWidth: "30em",
-                fontSize: 16,
-                color: "var(--color-neutral-700)",
-              }}
-            >
-              Kamu kurumları ve büyük ölçekli işletmelerin gizli kalmış kapasitelerini
-              ortaya çıkarıyor ve geliştiriyoruz.
+            <p style={{ margin: 0, maxWidth: "30em", fontSize: 16, color: "var(--color-neutral-700)" }}>
+              Kamu kurumları ve büyük ölçekli işletmelerin gizli kalmış kapasitelerini ortaya
+              çıkarıyor ve geliştiriyoruz.
             </p>
           </div>
 
@@ -311,28 +338,16 @@ export default function HomePage() {
                 </div>
                 <div style={{ padding: "var(--space-6) var(--space-4) var(--space-4)" }}>
                   <h3 style={{ fontSize: 20, margin: "0 0 var(--space-3)" }}>{area.title}</h3>
-                  <p style={{ margin: 0, fontSize: 15, color: "var(--color-neutral-700)" }}>
-                    {area.body}
-                  </p>
+                  <p style={{ margin: 0, fontSize: 15, color: "var(--color-neutral-700)" }}>{area.body}</p>
                 </div>
               </article>
             ))}
 
             <article
               className="card tilt-card"
-              style={{
-                background: "var(--color-accent)",
-                color: "var(--color-bg)",
-                padding: "var(--space-6) var(--space-4)",
-              }}
+              style={{ background: "var(--color-accent)", color: "var(--color-bg)", padding: "var(--space-6) var(--space-4)" }}
             >
-              <h3
-                style={{
-                  fontSize: 20,
-                  margin: "0 0 var(--space-4)",
-                  color: "var(--color-bg)",
-                }}
-              >
+              <h3 style={{ fontSize: 20, margin: "0 0 var(--space-4)", color: "var(--color-bg)" }}>
                 Neden {BRAND}?
               </h3>
               <div style={{ display: "grid", gap: "var(--space-3)", fontSize: 16 }}>
@@ -363,209 +378,236 @@ export default function HomePage() {
         {/* ── Model ─────────────────────────────────────────────────── */}
         <section id={SECTIONS.model} className="lp-sec">
           <h2 className="lp-h2">{BRAND} modeli nedir?</h2>
-          <p
-            style={{
-              fontSize: 17,
-              color: "var(--color-neutral-700)",
-              marginBottom: "var(--space-8)",
-            }}
-          >
-            Yedi katmanlı verimetri metodolojisi. Katmanlar sıralıdır; her birinin girdisi
-            de çıktısı da sayısaldır.
+          <p style={{ fontSize: 17, color: "var(--color-neutral-700)", marginBottom: "var(--space-8)" }}>
+            Yedi katmanlı verimetri metodolojisi.
           </p>
 
-          <ol
-            className="grid-4"
-            style={{ listStyle: "none", padding: 0, margin: 0, counterReset: "layer" }}
-          >
+          <ol className="grid-4" style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {LAYERS.map((layer, index) => (
               <li key={layer} className="card tilt-card step-card">
-                <span
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    fontSize: 30,
-                    lineHeight: 1,
-                    color: "var(--color-accent)",
-                  }}
-                >
+                <span style={{ fontFamily: "var(--font-heading)", fontSize: 30, lineHeight: 1, color: "var(--color-accent)" }}>
                   {index + 1}
                 </span>
                 <span style={{ fontSize: 17, fontWeight: 600 }}>{layer}</span>
               </li>
             ))}
-            <li
-              className="card tilt-card"
-              style={{
-                background: "var(--color-accent-2)",
-                color: "var(--color-bg)",
-                gridColumn: "1 / -1",
-              }}
-            >
-              <span style={{ fontFamily: "var(--font-heading)", fontSize: 30, lineHeight: 1 }}>
-                7
-              </span>
-              <span style={{ fontSize: 17, fontWeight: 600 }}>
-                Sürekli izleme, raporlama ve geliştirme
-              </span>
+            <li className="card tilt-card step-wide" style={{ background: "var(--color-accent-2)", color: "var(--color-bg)" }}>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: 30, lineHeight: 1 }}>7</span>
+              <span style={{ fontSize: 17, fontWeight: 600 }}>Sürekli izleme, raporlama ve geliştirme</span>
               <span style={{ fontSize: 13, opacity: 0.9 }}>
                 Aylık veri akışı, pano ve eşik aşımı uyarıları ile abonelik olarak sürer.
               </span>
             </li>
           </ol>
+
+          <div
+            className="washed"
+            style={{
+              position: "relative",
+              height: 300,
+              borderRadius: "calc(var(--radius-lg) * 1.2)",
+              overflow: "hidden",
+              marginTop: "var(--space-6)",
+            }}
+          >
+            <Image
+              src="/img/verim.jpg"
+              alt="Verimlilik akış şemasını beyaz tahtada anlatan ekip"
+              fill
+              sizes="(max-width: 1200px) 100vw, 1120px"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
         </section>
 
         {/* ── Ölçüm mimarisi ────────────────────────────────────────── */}
-        <section id={SECTIONS.olcum} className="lp-sec split-a">
-          <div>
-            <p className="kicker" style={{ color: "var(--color-accent-700)" }}>
-              Ölçüm mimarisi
-            </p>
-            <h2 className="lp-h2">Tahmin değil ölçüm</h2>
-            <p
-              style={{
-                fontSize: 19,
-                lineHeight: 1.5,
-                color: "var(--color-neutral-800)",
-                maxWidth: "24em",
-              }}
-            >
-              Baz dönem projenin başında dondurulur. Sonuç, aynı formül ve aynı sistemle
-              ölçülür. Formül sürümlenir: baz dönem hangi sürümle hesaplandıysa sonuç
-              ölçümü de o sürümle yapılır.
-            </p>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "var(--space-2)",
-                marginTop: "var(--space-6)",
-              }}
-            >
-              <span className="tag tag-outline">Sistem kaynaklı</span>
-              <span className="tag tag-outline">8 hafta baz veri</span>
-              <span className="tag tag-outline">Sözleşme eki formül</span>
-              <span className="tag tag-outline">Bağımsız doğrulayıcı</span>
-            </div>
-          </div>
-
-          <div
-            className="card elev-sm"
-            style={{
-              background: "var(--color-surface)",
-              padding: "var(--space-8)",
-              gap: "var(--space-6)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: "var(--space-4)",
-                flexWrap: "wrap",
-              }}
-            >
-              <span className="card-kicker">Temsili örnek · üretim, 1.400 çalışan</span>
-              <span style={{ fontSize: 13, color: "var(--color-neutral-700)" }}>6 ayda</span>
-            </div>
-
-            <div style={{ display: "grid", gap: "var(--space-6)" }}>
-              {EXAMPLE_METRICS.map((metric, index) => (
-                <div key={metric.name} style={{ display: "grid", gap: "var(--space-2)" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                      fontSize: 14,
-                      gap: "var(--space-3)",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{metric.name}</span>
-                    <span style={{ color: "var(--color-accent-2-700)" }}>
-                      {metric.from} → {metric.to}
-                    </span>
-                  </div>
-                  <div
-                    className="exbar"
-                    style={{
-                      width: "100%",
-                      background: "var(--color-neutral-300)",
-                      color: "var(--color-neutral-800)",
-                      animationDelay: `${0.05 + index * 0.12}s`,
-                    }}
-                  >
-                    baz dönem {metric.from}
-                  </div>
-                  <div
-                    className="exbar"
-                    style={{
-                      width: metric.width,
-                      background: "var(--color-accent-2)",
-                      color: "var(--color-bg)",
-                      animationDelay: `${0.2 + index * 0.12}s`,
-                    }}
-                  >
-                    şu an {metric.to}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                color: "var(--color-neutral-600)",
-                lineHeight: 1.5,
-              }}
-            >
-              Yöntemi göstermek için hazırlanmış temsili bir örnektir; belirli bir müşteri
-              vakası değildir. Yayımlanan gerçek vaka sonuçları örneklem sayısı, baz dönem
-              tanımı ve ortalama/medyan ayrımıyla birlikte sunulur.
-            </p>
+        <section id={SECTIONS.olcum} className="lp-sec band" style={{ paddingBottom: 40 }}>
+          <p className="kicker" style={{ color: "var(--color-accent-700)", marginBottom: "var(--space-3)" }}>
+            Ölçüm mimarisi
+          </p>
+          <h2 className="lp-h2" style={{ marginBottom: "var(--space-3)" }}>
+            Tahmin değil ölçüm
+          </h2>
+          <p style={{ fontSize: 19, lineHeight: 1.5, color: "var(--color-neutral-800)", maxWidth: "30em", margin: 0 }}>
+            Baz dönem projenin başında dondurulur. Sonuç, sizin sisteminizden, aynı formülle
+            ölçülür.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", marginTop: "var(--space-6)" }}>
+            <span className="tag tag-outline">Sistem kaynaklı veri</span>
+            <span className="tag tag-outline">8 hafta baz dönem</span>
+            <span className="tag tag-outline">Sözleşme eki formül</span>
+            <span className="tag tag-outline">Bağımsız doğrulama</span>
           </div>
         </section>
 
-        {/* ── Teste çağrı ───────────────────────────────────────────── */}
+        {/* ── Vaka örneği ───────────────────────────────────────────── */}
+        <section id={SECTIONS.vaka} className="lp-sec band" style={{ paddingTop: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: "var(--space-4)",
+              marginBottom: "var(--space-6)",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: 30 }}>Sektörünüzde neye benziyor?</h3>
+            <span className="tag tag-neutral">Temsili örnek · gerçek müşteri verisi değildir</span>
+          </div>
+          <CaseStudy />
+        </section>
+
+        {/* ── Bizsiz ve bizimle ─────────────────────────────────────── */}
+        <section id={SECTIONS.karsilastirma} className="lp-sec">
+          <Comparison />
+        </section>
+
+        {/* ── Artış yoksa prim yok ──────────────────────────────────── */}
+        <section id={SECTIONS.risk} className="lp-sec">
+          <div className="panel">
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: "var(--space-4)",
+                marginBottom: "var(--space-6)",
+              }}
+            >
+              <h2 className="lp-h2" style={{ margin: 0 }}>
+                Artış yoksa prim yok
+              </h2>
+              <span style={{ fontSize: 15, color: "var(--color-neutral-700)", maxWidth: "26em" }}>
+                Riski birlikte taşıyoruz; ölçüm sizin sisteminizden çıkıyor.
+              </span>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))",
+                gap: "var(--space-4)",
+              }}
+            >
+              {RISK_CARDS.map((card) => (
+                <div key={card.title} className="card tilt-card" style={{ background: "var(--color-bg)", gap: "var(--space-2)" }}>
+                  <span style={{ fontFamily: "var(--font-heading)", fontSize: 26, color: "var(--color-accent)" }}>
+                    {card.head}
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{card.title}</span>
+                  <span className="card-body">{card.body}</span>
+                </div>
+              ))}
+              <div className="card tilt-card" style={{ background: "var(--color-accent)", color: "var(--color-bg)", gap: "var(--space-2)" }}>
+                <span style={{ fontFamily: "var(--font-heading)", fontSize: 26 }}>Sıfır</span>
+                <span style={{ fontWeight: 600 }}>Doğrulanmayan artış</span>
+                <span style={{ fontSize: 14, lineHeight: 1.5 }}>Ölçüm artışı göstermiyorsa prim tahakkuk etmez.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Elinize ne geçiyor ────────────────────────────────────── */}
+        <section id={SECTIONS.rapor} className="lp-sec">
+          <ReportPreview />
+        </section>
+
+        {/* ── Kapsam ────────────────────────────────────────────────── */}
+        <section id={SECTIONS.paketler} className="lp-sec">
+          <h2 className="lp-h2">Kapsam</h2>
+          <p style={{ fontSize: 17, color: "var(--color-neutral-700)", marginBottom: "var(--space-8)" }}>
+            Üç aşama, ayrı ayrı alınabilir. Bedel kapsam görüşmesinde belirlenir.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+              gap: "var(--space-4)",
+            }}
+          >
+            {PACKAGES.map((pkg) => {
+              const dark = "highlight" in pkg && pkg.highlight;
+              return (
+                <article
+                  key={pkg.title}
+                  className={`card tilt-card ${dark ? "elev-md" : "elev-sm"}`}
+                  style={{
+                    gap: "var(--space-4)",
+                    background: dark ? "var(--color-accent-2)" : undefined,
+                    color: dark ? "var(--color-bg)" : undefined,
+                  }}
+                >
+                  <span
+                    className={dark ? "tag" : "tag tag-outline"}
+                    style={{
+                      alignSelf: "flex-start",
+                      background: dark ? "var(--color-bg)" : undefined,
+                      color: dark ? "var(--color-accent-2-800)" : undefined,
+                    }}
+                  >
+                    {pkg.stage}
+                  </span>
+                  <h3 style={{ margin: 0, fontSize: 20, color: dark ? "var(--color-bg)" : undefined }}>{pkg.title}</h3>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: dark ? undefined : "var(--color-accent-700)",
+                      opacity: dark ? 0.92 : undefined,
+                    }}
+                  >
+                    {pkg.time}
+                  </span>
+                  <ul
+                    style={{
+                      display: "grid",
+                      gap: "var(--space-2)",
+                      fontSize: 15,
+                      color: dark ? undefined : "var(--color-neutral-800)",
+                      listStyle: "none",
+                      padding: 0,
+                      margin: 0,
+                    }}
+                  >
+                    {pkg.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  {"note" in pkg && (
+                    <span style={{ fontSize: 13, color: dark ? undefined : "var(--color-neutral-700)", opacity: dark ? 0.9 : undefined }}>
+                      {pkg.note}
+                    </span>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── Simülasyona çağrı ─────────────────────────────────────── */}
         <section className="lp-sec" style={{ paddingTop: 0 }}>
-          <div className="panel-dark split-c" style={{ alignItems: "center" }}>
+          <div className="panel-dark split-cta">
             <div>
               <p className="kicker" style={{ color: "var(--color-accent-300)" }}>
-                Atıl Kapasite Testi
+                Verim Simülasyonu
               </p>
               <h2 className="lp-h2" style={{ color: "var(--color-accent-100)" }}>
                 Kaynaklarınızın gerçekte ne kadar değerli olduğunu öğrenin.
               </h2>
-              <p
-                style={{
-                  fontSize: 17,
-                  lineHeight: 1.6,
-                  color: "var(--color-accent-200)",
-                  maxWidth: "34em",
-                  margin: 0,
-                }}
-              >
-                On iki soru, yaklaşık üç dakika. Kontrol alanı, onay katmanı, fazla mesai,
-                devir ve toplantı yükü girdilerinden tahmini bir TL karşılığı hesaplanır;
-                ayrıntılı rapor e-posta ile iletilir.
+              <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--color-accent-200)", maxWidth: "34em", margin: 0 }}>
+                Beş kaynak alanında beş karar, yaklaşık üç dakika. Her seçim bir sonraki durumu
+                değiştirir; sonunda verim endeksiniz, kazanç eğriniz ve kaçırdığınız fırsatlar
+                önünüze gelir. Ayrıntılı rapor e-posta ile iletilir.
               </p>
             </div>
             <div style={{ display: "grid", gap: "var(--space-3)", justifyItems: "start" }}>
               <Link
                 className="btn btn-primary"
                 href={ROUTES.test}
-                style={{
-                  fontSize: 16,
-                  padding: "14px 26px",
-                  background: "var(--color-accent-400)",
-                  color: "var(--color-accent-900)",
-                }}
+                style={{ fontSize: 16, padding: "14px 26px", background: "var(--color-accent-400)", color: "var(--color-accent-900)" }}
               >
-                Teste başlayın
-              </Link>
-              <Link href={ROUTES.dashboard} style={{ color: "var(--color-accent-300)", fontSize: 15 }}>
-                Abonelik panosunu görün →
+                Simülasyona başlayın
               </Link>
             </div>
           </div>
@@ -574,16 +616,8 @@ export default function HomePage() {
         {/* ── Teslimat ──────────────────────────────────────────────── */}
         <section id={SECTIONS.teslimat} className="lp-sec">
           <h2 className="lp-h2">Nasıl çalışıyoruz?</h2>
-          <p
-            style={{
-              fontSize: 17,
-              color: "var(--color-neutral-700)",
-              maxWidth: "34em",
-              marginBottom: "var(--space-8)",
-            }}
-          >
-            Yedi aşama, kapı kriterleriyle. Teşhis raporu tek başına alınabilir; devam
-            etmeme hakkı sizdedir.
+          <p style={{ fontSize: 17, color: "var(--color-neutral-700)", maxWidth: "34em", marginBottom: "var(--space-8)" }}>
+            Yedi aşama, kapı kriterleriyle. Teşhis raporu tek başına alınabilir.
           </p>
           <ol
             style={{
@@ -615,90 +649,90 @@ export default function HomePage() {
                 >
                   {stage.time}
                 </span>
-                <span
-                  style={{ fontFamily: "var(--font-heading)", fontSize: 18, lineHeight: 1.15 }}
-                >
-                  {stage.name}
-                </span>
+                <span style={{ fontFamily: "var(--font-heading)", fontSize: 18, lineHeight: 1.15 }}>{stage.name}</span>
               </li>
             ))}
           </ol>
         </section>
 
-        {/* ── Ekip ──────────────────────────────────────────────────── */}
-        <section id={SECTIONS.ekip} className="lp-sec">
-          <div className="panel">
-            <div className="split-b" style={{ alignItems: "start" }}>
-              <div>
-                <p className="kicker" style={{ color: "var(--color-accent-2-800)" }}>
-                  Ekip ve danışmanlar
-                </p>
-                <h2 className="lp-h2">Yöntem kişiye değil şablona bağlıdır</h2>
-                <p
-                  style={{
-                    fontSize: 18,
-                    lineHeight: 1.5,
-                    color: "var(--color-neutral-800)",
-                    maxWidth: "26em",
-                  }}
-                >
-                  Yöntem şablonlarda yaşar: veri talep listesi, analiz defteri, aksiyon
-                  kütüphanesi.
-                </p>
-                <Link
-                  className="btn btn-secondary"
-                  href={`#${SECTIONS.basvuru}`}
-                  style={{ marginTop: "var(--space-4)" }}
-                >
-                  Danışman olarak başvurun
-                </Link>
+        {/* ── Kimler için ───────────────────────────────────────────── */}
+        <section id={SECTIONS.referanslar} className="lp-sec band">
+          <h2 className="lp-h2">Kimler için çalışıyoruz</h2>
+          <p style={{ fontSize: 17, color: "var(--color-neutral-700)", maxWidth: "40em", marginBottom: "var(--space-6)" }}>
+            Ortak nokta ölçek değil: elinde ölçülmemiş kaynak bulunan her kurum.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
+              gap: "var(--space-3)",
+              marginBottom: "var(--space-8)",
+            }}
+          >
+            {AUDIENCES.map((a) => (
+              <div key={a.head} className="card tilt-card" style={{ background: "var(--color-neutral-100)", gap: "var(--space-2)" }}>
+                <span style={{ fontFamily: "var(--font-heading)", fontSize: 20, color: "var(--color-accent)" }}>{a.head}</span>
+                <span style={{ fontSize: 15, color: "var(--color-neutral-800)" }}>{a.body}</span>
               </div>
+            ))}
+          </div>
 
+          <h3 style={{ margin: "0 0 var(--space-6)", fontSize: 26 }}>Masaya genelde şu üç cümleyle geliyorlar</h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+              gap: "var(--space-4)",
+            }}
+          >
+            {SITUATIONS.map((s) => (
+              <article key={s.quote} className="alan-card elev-sm tilt-card" style={{ background: "var(--color-bg)" }}>
+                <div className="alan-media washed" style={{ height: 170 }}>
+                  <Image src={s.src} alt={s.alt} fill sizes="(max-width: 720px) 100vw, (max-width: 1080px) 50vw, 360px" style={{ objectFit: "cover" }} />
+                </div>
+                <div style={{ padding: "var(--space-6) var(--space-4) var(--space-4)", display: "grid", gap: "var(--space-3)" }}>
+                  <p style={{ margin: 0, fontSize: 18, lineHeight: 1.4, fontWeight: 600 }}>{s.quote}</p>
+                  <p style={{ margin: 0, fontSize: 15, color: "var(--color-neutral-700)" }}>{s.body}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Sık sorulanlar ────────────────────────────────────────── */}
+        <section id={SECTIONS.sss} className="lp-sec band">
+          <div className="split-sss">
+            <div>
+              <h2 className="lp-h2">Sık sorulanlar</h2>
+              <p style={{ fontSize: 16, color: "var(--color-neutral-700)", maxWidth: "20em" }}>
+                En çok duyduğumuz itiraz: “bu gerçekten olur mu?” Cevapları burada.
+              </p>
               <div
+                className="washed"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
-                  gap: "var(--space-3)",
+                  position: "relative",
+                  borderRadius: "calc(var(--radius-lg) * 1.2)",
+                  overflow: "hidden",
+                  aspectRatio: "4 / 5",
+                  marginTop: "var(--space-6)",
                 }}
               >
-                {ROLES.map((role) => (
-                  <div
-                    key={role.initials}
-                    className="card"
-                    style={{
-                      background: "var(--color-bg)",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: "var(--space-3)",
-                    }}
-                  >
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: "50%",
-                        flex: "none",
-                        background: "var(--color-accent-200)",
-                        color: "var(--color-accent-800)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "var(--font-heading)",
-                        fontSize: 17,
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      {role.initials}
-                    </div>
-                    <div style={{ display: "grid", gap: 2 }}>
-                      <span className="card-title">{role.title}</span>
-                      <span className="card-body">{role.body}</span>
-                      <span className="card-meta">{role.meta}</span>
-                    </div>
-                  </div>
-                ))}
+                <Image
+                  src="/img/verim3.jpg"
+                  alt="Ofis ortamında verimlilik hedeflerini konuşan ekip"
+                  fill
+                  sizes="(max-width: 1080px) 100vw, 400px"
+                  style={{ objectFit: "cover" }}
+                />
               </div>
+            </div>
+            <div>
+              {FAQ.filter((f) => !f.claim || CLAIMS.sevenfold).map((f) => (
+                <details key={f.q} className="faq">
+                  <summary>{f.q}</summary>
+                  <p>{f.a}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
@@ -707,15 +741,7 @@ export default function HomePage() {
         <section className="lp-sec split-b">
           <div>
             <h2 className="lp-h2">Veri güvenliği</h2>
-            <p
-              style={{
-                fontSize: 18,
-                lineHeight: 1.5,
-                paddingLeft: "var(--space-4)",
-                borderLeft: "3px solid var(--color-accent)",
-                margin: 0,
-              }}
-            >
+            <p style={{ fontSize: 18, lineHeight: 1.5, paddingLeft: "var(--space-4)", borderLeft: "3px solid var(--color-accent)", margin: 0 }}>
               Kişi bazlı kimlik hiçbir tabloda tutulmaz. En küçük tanecik roldür.
             </p>
             <p style={{ marginTop: "var(--space-4)", fontSize: 15 }}>
@@ -723,15 +749,7 @@ export default function HomePage() {
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
-            {[
-              "Veri minimizasyonu",
-              "Rol bazlı toplulaştırma",
-              "Müşteriye özel şema",
-              "Aktarımda ve dinlenme hâlinde şifreleme",
-              "Erişim logları",
-              "İmha tutanağı",
-              "Kişi bazlı izleme yok",
-            ].map((tag) => (
+            {SECURITY_TAGS.map((tag) => (
               <span key={tag} className="tag tag-neutral">
                 {tag}
               </span>
@@ -745,16 +763,10 @@ export default function HomePage() {
             <div>
               <h2 className="lp-h2">Değerlendirme başvurusu</h2>
               <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--color-neutral-800)" }}>
-                Ön görüşme 1 saattir. Karar verici katılımı ve bütçe aralığının
-                doğrulanması, sonraki aşamaya geçişin kapı kriteridir.
+                Ön görüşme 1 saattir. Karar verici katılımı ve bütçe aralığının doğrulanması,
+                sonraki aşamaya geçişin kapı kriteridir.
               </p>
-              <div
-                className="card"
-                style={{
-                  background: "var(--color-neutral-100)",
-                  marginTop: "var(--space-6)",
-                }}
-              >
+              <div className="card" style={{ background: "var(--color-neutral-100)", marginTop: "var(--space-6)" }}>
                 <span className="card-kicker">{BRAND} kimler için?</span>
                 <div style={{ display: "grid", gap: "var(--space-2)", fontSize: 15 }}>
                   <span>Bakanlıklar ve bağlı kurumlar</span>
@@ -774,7 +786,7 @@ export default function HomePage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([serviceJsonLd, faqJsonLd]) }}
       />
     </>
   );

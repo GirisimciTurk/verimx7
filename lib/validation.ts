@@ -6,64 +6,24 @@
 
 import { z } from "zod";
 
-import { RESOURCE_AREAS } from "./form-constants";
+import { QUICK_LIMITS, RESOURCE_AREAS, SIMULATION_SECTORS } from "./form-constants";
 
 export { RESOURCE_AREAS };
 
-/* ── Atıl Kapasite Testi girdileri ─────────────────────────────────────── */
-
-export const sectorKeySchema = z.enum([
-  "holding",
-  "bakanlik",
-  "belediye",
-  "ppp",
-  "uretim",
-  "lojistik",
-  "saglik",
-  "perakende",
-]);
-
-const band = z
-  .number({ error: "Seçenek eksik." })
-  .int()
-  .min(0)
-  .max(3);
-
-export const testInputSchema = z.object({
-  emp: z.number().int().min(20).max(5000),
-  cost: z.number().int().min(15000).max(250000),
-  span: band,
-  layers: z.number().int().min(1).max(10),
-  meet: z.number().int().min(2).max(25),
-  dec: band,
-  overtime: z.number().int().min(0).max(40),
-  turnover: z.number().int().min(2).max(45),
-  vac: band,
-  rework: z.number().int().min(0).max(40),
-  ramp: band,
-  systems: z.object({
-    erp: z.boolean(),
-    ticket: z.boolean(),
-    hr: z.boolean(),
-    calendar: z.boolean(),
-  }),
-  sector: sectorKeySchema,
-});
-
-export type TestInput = z.infer<typeof testInputSchema>;
+/* ── Hızlı tahmin girdileri ────────────────────────────────────────────── */
 
 export const quickInputSchema = z.object({
-  emp: z.number().int().min(20).max(5000),
-  revenueMn: z.number().int().min(50).max(10000),
-  cost: z.number().int().min(15000).max(250000),
+  emp: z.number().int().min(QUICK_LIMITS.emp.min).max(QUICK_LIMITS.emp.max),
+  revenueMn: z.number().int().min(QUICK_LIMITS.revenueMn.min).max(QUICK_LIMITS.revenueMn.max),
+  cost: z.number().int().min(QUICK_LIMITS.cost.min).max(QUICK_LIMITS.cost.max),
 });
 
 export type QuickInput = z.infer<typeof quickInputSchema>;
 
-export const calcRequestSchema = z.discriminatedUnion("mode", [
-  z.object({ mode: z.literal("quick"), input: quickInputSchema }),
-  z.object({ mode: z.literal("full"), input: testInputSchema }),
-]);
+export const calcRequestSchema = z.object({
+  mode: z.literal("quick"),
+  input: quickInputSchema,
+});
 
 /* ── Ortak alan doğrulayıcıları ────────────────────────────────────────── */
 
@@ -94,6 +54,8 @@ const emailSchema = z
   .max(160, "E-posta adresi çok uzun.")
   .email("Geçerli bir e-posta adresi girin.");
 
+const consentSchema = z.literal(true, { message: "Aydınlatma metni onayı gereklidir." });
+
 /**
  * Bot tuzağı: gerçek kullanıcı bu alanı görmez, dolduramaz.
  *
@@ -113,19 +75,63 @@ export const applicationSchema = z.object({
   area: z.enum(RESOURCE_AREAS, { message: "Bir kaynak alanı seçin." }),
   detail: trimmed(20, 4000, "Açıklama"),
   // KVKK: aydınlatma onayı ile ticari ileti izni ayrı kutulardır.
-  consent: z.literal(true, { message: "Aydınlatma metni onayı gereklidir." }),
+  consent: consentSchema,
   marketingConsent: z.boolean().optional().default(false),
   website: honeypotSchema,
 });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;
 
-/* ── Ayrıntılı rapor talebi ────────────────────────────────────────────── */
+/**
+ * Yan paneldeki kısa başvuru: ad, kurum, e-posta. Ön görüşme talebi için
+ * yeterli; kaynak alanı ve açıklama görüşmede alınır.
+ */
+export const shortApplicationSchema = z.object({
+  form: z.literal("kisa"),
+  name: trimmed(2, 120, "Ad soyad"),
+  org: trimmed(2, 160, "Kurum adı"),
+  email: emailSchema,
+  consent: consentSchema,
+  website: honeypotSchema,
+});
+
+export type ShortApplicationInput = z.infer<typeof shortApplicationSchema>;
+
+/* ── Simülasyon raporu talebi ──────────────────────────────────────────── */
+
+const shortText = (max: number) => z.string().trim().min(1).max(max);
+
+/**
+ * Simülasyon tarayıcıda çalışır; sunucu yalnızca sonucun özetini kaydeder.
+ * Alanlar sınırlı ve kısa tutulur: bu bir serbest metin kanalı değildir.
+ */
+export const simulationSummarySchema = z.object({
+  sector: z.enum(SIMULATION_SECTORS),
+  index: z.number().int().min(0).max(100),
+  band: shortText(60),
+  /** Birikimli etki, milyon ₺ (işaretli). */
+  cashMn: z.number().min(-1000).max(1000),
+  path: z
+    .array(
+      z.object({
+        area: shortText(30),
+        label: shortText(120),
+        effect: shortText(160),
+      }),
+    )
+    .min(1)
+    .max(5),
+  missed: z.array(shortText(200)).max(5),
+  weakest: shortText(30),
+  strongest: shortText(30),
+});
+
+export type SimulationSummary = z.infer<typeof simulationSummarySchema>;
 
 export const reportRequestSchema = z.object({
   email: emailSchema,
-  input: testInputSchema,
-  consent: z.literal(true, { message: "Aydınlatma metni onayı gereklidir." }),
+  simulation: simulationSummarySchema,
+  consent: consentSchema,
   website: honeypotSchema,
 });
 

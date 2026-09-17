@@ -17,6 +17,17 @@ export const RESOURCE_AREAS = [
 
 export type ResourceArea = (typeof RESOURCE_AREAS)[number];
 
+/** Ana sayfadaki hızlı tahmin kaydırıcılarının sınırları. Katsayılar sunucuda (lib/engine.ts). */
+export const QUICK_LIMITS = {
+  emp: { min: 20, max: 5000, step: 10, default: 320 },
+  revenueMn: { min: 50, max: 10_000, step: 50, default: 850 },
+  cost: { min: 15_000, max: 250_000, step: 1_000, default: 62_000 },
+} as const;
+
+/** Simülasyon sayfası ve yan panel formunun sunucuyla paylaştığı sabitler. */
+export const SIMULATION_SECTORS = ["sanayi", "tarim", "hizmet"] as const;
+export type SimulationSectorKey = (typeof SIMULATION_SECTORS)[number];
+
 /* ── Hafif istemci kontrolleri ─────────────────────────────────────────── */
 
 /** Sunucudaki zod şemasıyla aynı sınırlar; mesajlar da aynı metin. */

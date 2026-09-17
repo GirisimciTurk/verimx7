@@ -26,14 +26,17 @@ export const PARENT_LEGAL = "DEV YAPIMCILIK YAYINCILIK SAN. TİC. LTD. ŞTİ.";
  * 6502 sayılı Kanun ve Ticari Reklam ve Haksız Ticari Uygulamalar Yönetmeliği
  * uyarınca ispat yükü reklam verendedir.
  *
- * `sevenfold` (7 kat / %700 verim artışı) VARSAYILAN OLARAK KAPALI: markanın
- * adında geçse de, sitede yayımlanabilmesi için hangi metrikte, hangi paydada
- * ve hangi baz döneme göre ölçüldüğünü gösteren bir dayanak dosyası gerekir.
- * Dosya hazır olduğunda burayı true yapın ve app/page.tsx içindeki
- * `SEVENFOLD_STAT` bloğundaki payda metnini gerçek ölçüme göre yazın.
+ * `sevenfold` (%700 hedeflenen verim artışı): 17 Eylül 2026 tarihli tasarım
+ * kanvasıyla birlikte şirket kararıyla AÇILDI. İddia, değer önerisi
+ * bloğundaki sayı ve SSS'deki "%700 nasıl mümkün olabilir?" maddesiyle
+ * yayımlanır; SSS maddesi paydayı (atıl kaynağın gelirleştirilmesiyle uzun
+ * vadede ölçülen toplam katma değer) açıklar. Dayanak dosyasının (hangi
+ * metrik, hangi baz dönem, ham ölçümler) ibraz edilebilir olması şirketin
+ * sorumluluğundadır; dosya yoksa burayı false yapmak iddiayı sitenin her
+ * yerinden kaldırır.
  */
 export const CLAIMS = {
-  sevenfold: false,
+  sevenfold: true,
 } as const;
 
 export const TAGLINE =
@@ -79,6 +82,7 @@ export const CONTACT = {
 } as const;
 
 export const GROUP_LINKS = [
+  { label: "Hakkımızda", href: "https://girisimciturk.com/ekyp/kazancta-yuzde-700-artis/" },
   { label: "Girişimci Türk", href: "https://girisimciturk.com" },
   { label: "depremTek Market", href: "https://depremtek.market" },
 ] as const;
@@ -88,9 +92,21 @@ export const SECTIONS = {
   alanlar: "alanlar",
   model: "model",
   olcum: "olcum",
+  vaka: "vaka",
+  karsilastirma: "karsilastirma",
+  risk: "risk",
+  rapor: "rapor",
+  paketler: "paketler",
   teslimat: "teslimat",
-  ekip: "ekip",
+  referanslar: "referanslar",
+  sss: "sss",
   basvuru: "basvuru",
+} as const;
+
+/** Simülasyon sayfası içi çapalar. */
+export const TEST_ANCHORS = {
+  simulation: "test",
+  library: "testler",
 } as const;
 
 export const ROUTES = {
@@ -114,15 +130,19 @@ export type NavItem = {
 /**
  * Papatya menüsü tam sekiz yuvaya göre konumlandırılmıştır
  * (globals.css içindeki .daisy-item:nth-of-type kuralları).
+ *
+ * "Ana sayfa" yalnızca ana sayfada, "Simülasyon" yalnızca simülasyon
+ * sayfasında "burada" işaretlenir; "Testler" aynı sayfanın alt bölümüne
+ * gider ve ayrıca işaretlenmez.
  */
 export const NAV_ITEMS: NavItem[] = [
+  { label: "Ana sayfa", href: ROUTES.home, matchPath: ROUTES.home },
   { label: "Ne yapıyoruz", href: `${ROUTES.home}#${SECTIONS.alanlar}` },
   { label: "Model", href: `${ROUTES.home}#${SECTIONS.model}` },
   { label: "Ölçüm", href: `${ROUTES.home}#${SECTIONS.olcum}` },
   { label: "Teslimat", href: `${ROUTES.home}#${SECTIONS.teslimat}` },
-  { label: "Ekip", href: `${ROUTES.home}#${SECTIONS.ekip}` },
-  { label: "Atıl Kapasite Testi", href: ROUTES.test, matchPath: ROUTES.test },
-  { label: "Pano", href: ROUTES.dashboard, matchPath: ROUTES.dashboard },
+  { label: "Simülasyon", href: ROUTES.test, matchPath: ROUTES.test },
+  { label: "Testler", href: `${ROUTES.test}#${TEST_ANCHORS.library}` },
   { label: "Başvuru", href: `${ROUTES.home}#${SECTIONS.basvuru}`, cta: true },
 ];
 

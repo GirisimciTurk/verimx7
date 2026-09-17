@@ -3,9 +3,15 @@ import { NextResponse } from "next/server";
 import { BodyTooLarge, guard, readJson } from "@/lib/api-guard";
 import { deliverLead, hasDeliveryChannel, type LeadPayload } from "@/lib/leads";
 import { CONTACT } from "@/lib/site";
-import { applicationSchema, fieldErrors } from "@/lib/validation";
+import { applicationSchema, fieldErrors, shortApplicationSchema } from "@/lib/validation";
 
-/** Değerlendirme başvurusu formu. */
+/**
+ * Değerlendirme başvurusu.
+ *
+ * İki biçim aynı uca gelir: ana sayfadaki tam form ve yan paneldeki kısa
+ * form (`form: "kisa"` — ad, kurum, e-posta). Kısa form ön görüşme talebi
+ * için yeterlidir; kaynak alanı ve açıklama görüşmede alınır.
+ */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +45,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek gövdesi." }, { status: 400 });
   }
 
-  const parsed = applicationSchema.safeParse(body);
+  const isShort =
+    typeof body === "object" && body !== null && (body as { form?: unknown }).form === "kisa";
+  const parsed = isShort ? shortApplicationSchema.safeParse(body) : applicationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Formda eksik veya hatalı alanlar var.", fields: fieldErrors(parsed.error) },
@@ -71,37 +79,64 @@ export async function POST(request: Request) {
   // Günlüklerde kişisel veri yerine anılacak kısa referans.
   const ref = crypto.randomUUID().slice(0, 8);
 
-  const lead: LeadPayload = {
-    kind: "basvuru",
-    ref,
-    title: `Değerlendirme başvurusu — ${data.org}`,
-    fields: [
-      { label: "Ad soyad", value: data.name },
-      { label: "Kurum", value: data.org },
-      { label: "E-posta", value: data.email },
-      { label: "Telefon", value: data.phone },
-      { label: "Kaynak alanı", value: data.area },
-      { label: "Açıklama", value: data.detail },
-      { label: "Aydınlatma onayı", value: "Verildi" },
-      { label: "Ticari ileti izni", value: data.marketingConsent ? "Verildi" : "Verilmedi" },
-    ],
-    raw: {
-      name: data.name,
-      org: data.org,
-      email: data.email,
-      phone: data.phone,
-      area: data.area,
-      detail: data.detail,
-      consent: true,
-      marketingConsent: data.marketingConsent,
-    },
-    meta: {
-      receivedAt: new Date().toISOString(),
-      ip: gate.identity.display,
-      userAgent: request.headers.get("user-agent") ?? "—",
-      referer: request.headers.get("referer"),
-    },
+  const meta: LeadPayload["meta"] = {
+    receivedAt: new Date().toISOString(),
+    ip: gate.identity.display,
+    userAgent: request.headers.get("user-agent") ?? "—",
+    referer: request.headers.get("referer"),
   };
+
+  const lead: LeadPayload =
+    "form" in data
+      ? {
+          kind: "basvuru",
+          ref,
+          title: `Ön görüşme talebi (yan panel) — ${data.org}`,
+          fields: [
+            { label: "Ad soyad", value: data.name },
+            { label: "Kurum", value: data.org },
+            { label: "E-posta", value: data.email },
+            { label: "Kaynak", value: "Yan panel kısa formu" },
+            { label: "Aydınlatma onayı", value: "Verildi" },
+          ],
+          raw: {
+            form: "kisa",
+            name: data.name,
+            org: data.org,
+            email: data.email,
+            consent: true,
+          },
+          meta,
+        }
+      : {
+          kind: "basvuru",
+          ref,
+          title: `Değerlendirme başvurusu — ${data.org}`,
+          fields: [
+            { label: "Ad soyad", value: data.name },
+            { label: "Kurum", value: data.org },
+            { label: "E-posta", value: data.email },
+            { label: "Telefon", value: data.phone },
+            { label: "Kaynak alanı", value: data.area },
+            { label: "Açıklama", value: data.detail },
+            { label: "Aydınlatma onayı", value: "Verildi" },
+            {
+              label: "Ticari ileti izni",
+              value: data.marketingConsent ? "Verildi" : "Verilmedi",
+            },
+          ],
+          raw: {
+            name: data.name,
+            org: data.org,
+            email: data.email,
+            phone: data.phone,
+            area: data.area,
+            detail: data.detail,
+            consent: true,
+            marketingConsent: data.marketingConsent,
+          },
+          meta,
+        };
 
   const delivery = await deliverLead(lead);
 

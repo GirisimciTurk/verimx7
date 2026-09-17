@@ -166,11 +166,11 @@ export default function Page() {
                   </td>
                 </tr>
                 <tr>
-                  <td>Atıl Kapasite Testi yanıtları (kullanılması hâlinde)</td>
+                  <td>Verim Simülasyonu ve test yanıtları (kullanılması hâlinde)</td>
                   <td>Yerel depolama (localStorage / sessionStorage)</td>
                   <td>
                     {
-                      "Testteki 12 sorunun yanıtlarının sayfa yenilendiğinde veya sekme yanlışlıkla kapatıldığında kaybolmaması. Bu kopya tarayıcınızda kalır; çerez olarak sunucuya gönderilmez."
+                      "Simülasyon kararlarının ve test kütüphanesi yanıtlarının sayfa yenilendiğinde veya sekme yanlışlıkla kapatıldığında kaybolmaması. Bugün kullanılmamaktadır; yanıtlar yalnızca sayfa açık kaldığı sürece bellekte tutulur. Kullanılması hâlinde bu kopya tarayıcınızda kalır; çerez olarak sunucuya gönderilmez."
                     }
                   </td>
                   <td>
@@ -186,7 +186,7 @@ export default function Page() {
 
           <p>
             {
-              "Yerel depolama satırıyla ilgili bir noktayı açıkça belirtelim: Atıl Kapasite Testinin hesaplama motoru tarayıcınızda değil sunucuda çalışır. Bu nedenle test sırasında verdiğiniz yanıtlar, sonucu hesaplamak üzere sunucuya gönderilir. Bu istekler kayda geçirilmez; girdiler yalnızca hesap için kullanılır ve yanıt döndükten sonra saklanmaz. Yanıtlarınız ancak siz e-posta adresinizi bırakıp ayrıntılı rapor talep ederseniz kaydedilir. Yukarıdaki yerel depolama satırı, bu gönderimden ayrı olarak, yanıtların tarayıcınızda tutulan kopyasıyla ilgilidir."
+              "Yerel depolama satırıyla ilgili bir noktayı açıkça belirtelim: Verim Simülasyonu ve test kütüphanesi tamamen tarayıcınızda çalışır; kararlarınız ve yanıtlarınız sunucuya gönderilmez. Ana sayfadaki hızlı tahmin aracı ise üç girdiyi (çalışan sayısı, yıllık ciro, kişi başı maliyet) hesaplanmak üzere sunucuya gönderir; bu istekler kayda geçirilmez, girdiler yalnızca hesap için kullanılır ve yanıt döndükten sonra saklanmaz. Simülasyon sonucunuz ancak siz e-posta adresinizi bırakıp ayrıntılı rapor talep ederseniz, sonucun özetiyle birlikte kaydedilir. Yukarıdaki yerel depolama satırı, bu gönderimlerden ayrı olarak, yanıtların tarayıcınızda tutulabilecek kopyasıyla ilgilidir."
             }
           </p>
 
@@ -305,7 +305,7 @@ export default function Page() {
 
           <p>
             {
-              "İki noktayı hatırlatalım: (1) Site verilerini sildiğinizde, Atıl Kapasite Testine verdiğiniz yanıtların tarayıcınızda tutulan kopyası varsa o da silinir ve teste baştan başlamanız gerekir. (2) Teknik olarak zorunlu çerezleri tamamen engellerseniz form gönderimi gibi bazı işlevler çalışmayabilir. Tarayıcınızı gizli / özel pencere modunda kullanmak da bu verilerin pencere kapandığında silinmesini sağlar."
+              "İki noktayı hatırlatalım: (1) Site verilerini sildiğinizde, Verim Simülasyonuna ve testlere verdiğiniz yanıtların tarayıcınızda tutulan kopyası varsa o da silinir ve baştan başlamanız gerekir. (2) Teknik olarak zorunlu çerezleri tamamen engellerseniz form gönderimi gibi bazı işlevler çalışmayabilir. Tarayıcınızı gizli / özel pencere modunda kullanmak da bu verilerin pencere kapandığında silinmesini sağlar."
             }
           </p>
 

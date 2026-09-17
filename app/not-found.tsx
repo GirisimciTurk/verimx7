@@ -36,7 +36,7 @@ export default function NotFound() {
             Ana sayfa
           </Link>
           <Link className="btn btn-secondary" href={ROUTES.test}>
-            Atıl Kapasite Testi
+            Verim Simülasyonu
           </Link>
           <Link className="btn btn-secondary" href={`${ROUTES.home}#${SECTIONS.basvuru}`}>
             Değerlendirme başvurusu

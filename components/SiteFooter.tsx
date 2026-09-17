@@ -10,15 +10,18 @@ import {
   ROUTES,
   SECTIONS,
   TAGLINE,
+  TEST_ANCHORS,
 } from "@/lib/site";
 
 const serviceLinks = [
   { label: "Ne yapıyoruz", href: `${ROUTES.home}#${SECTIONS.alanlar}` },
   { label: `${BRAND} modeli`, href: `${ROUTES.home}#${SECTIONS.model}` },
   { label: "Ölçüm mimarisi", href: `${ROUTES.home}#${SECTIONS.olcum}` },
+  { label: "Vaka örneği", href: `${ROUTES.home}#${SECTIONS.vaka}` },
+  { label: "Kapsam ve aşamalar", href: `${ROUTES.home}#${SECTIONS.paketler}` },
   { label: "Teslimat mimarisi", href: `${ROUTES.home}#${SECTIONS.teslimat}` },
-  { label: "Atıl Kapasite Testi", href: ROUTES.test },
-  { label: "Verimetri panosu", href: ROUTES.dashboard },
+  { label: "Verim simülasyonu", href: `${ROUTES.test}#${TEST_ANCHORS.simulation}` },
+  { label: "Test kütüphanesi", href: `${ROUTES.test}#${TEST_ANCHORS.library}` },
 ];
 
 const supportLinks = [
@@ -26,7 +29,8 @@ const supportLinks = [
   { label: "KVKK aydınlatma metni", href: ROUTES.kvkk },
   { label: "Gizlilik ve veri güvenliği", href: ROUTES.privacy },
   { label: "Çerez politikası", href: ROUTES.cookies },
-  { label: "Ölçüm kalite kapıları", href: `${ROUTES.home}#${SECTIONS.olcum}` },
+  { label: "Sık sorulan sorular", href: `${ROUTES.home}#${SECTIONS.sss}` },
+  { label: "Prim ve garanti modeli", href: `${ROUTES.home}#${SECTIONS.risk}` },
 ];
 
 export default function SiteFooter() {
@@ -93,7 +97,7 @@ export default function SiteFooter() {
         </nav>
 
         <div>
-          <h6>Grup</h6>
+          <h6>Girişimci Türk</h6>
           <div style={{ display: "grid", gap: "var(--space-2)", fontSize: 14 }}>
             {GROUP_LINKS.map((link) => (
               <a key={link.href} href={link.href} rel="noopener">

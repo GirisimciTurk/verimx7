@@ -95,15 +95,15 @@ export default function Page() {
                   <td>Evet — yapılandırılan kanallara iletilir ve saklanır</td>
                 </tr>
                 <tr>
-                  <td>Atıl Kapasite Testi</td>
+                  <td>Verim Simülasyonu ve test kütüphanesi</td>
                   <td>
-                    12 sorunun sayısal, bantlı veya işaretlemeli yanıtları ile seçtiğiniz
-                    kurum tipi. İsim, e-posta, telefon gibi hiçbir kimlik alanı istenmez ve
-                    gönderilmez
+                    Seçtiğiniz kurum tipi, verdiğiniz beş karar ve altı testin yanıtları.
+                    Tamamı tarayıcınızda işlenir; isim, e-posta, telefon gibi hiçbir kimlik
+                    alanı istenmez
                   </td>
                   <td>
-                    <strong>Hayır</strong> — yanıtlar yalnızca hesaplanır ve sonuç ekrana
-                    döner; sunucuda saklanmaz
+                    <strong>Hayır</strong> — hiçbir şey sunucuya gönderilmez; sonuç
+                    tarayıcınızda hesaplanır
                   </td>
                 </tr>
                 <tr>
@@ -120,8 +120,9 @@ export default function Page() {
                 <tr>
                   <td>{"“Ayrıntılı raporu e-posta ile al”"}</td>
                   <td>
-                    E-posta adresiniz, raporun üretileceği test girdileri, bu girdilerden
-                    hesaplanan sonuç, kullanılan formül sürümü ve aydınlatma onayı
+                    E-posta adresiniz, simülasyon sonucunuzun özeti (kurum tipi, verim endeksi,
+                    bant, birikimli etki, kararlar, kaçırılan fırsatlar, en zayıf ve en güçlü
+                    alan) ve aydınlatma onayı
                   </td>
                   <td>Evet — raporu gönderebilmek için kaydedilir ve iletilir</td>
                 </tr>
@@ -141,14 +142,14 @@ export default function Page() {
           </div>
 
           <p>
-            Hesaplama isteklerinde (test ve hızlı tahmin) IP adresiniz, yalnızca aynı adresten
+            Hesaplama isteklerinde (hızlı tahmin) IP adresiniz, yalnızca aynı adresten
             gelen istek sayısını sınırlamak için sunucunun geçici belleğinde kısa süre tutulur;
             kalıcı bir kayda yazılmaz ve hesaplama girdileriyle birlikte saklanmaz.
           </p>
 
           <p>
-            Testi doldurup göndermeniz sizi hiçbir kayda bağlamaz. Kimliğinizi bize
-            bildirmeden testi çalıştırıp sonucu görebilirsiniz; kimlik verisi yalnızca
+            Simülasyonu ve testleri tamamlamanız sizi hiçbir kayda bağlamaz. Kimliğinizi bize
+            bildirmeden simülasyonu çalıştırıp sonucu görebilirsiniz; kimlik verisi yalnızca
             raporu e-posta ile istediğinizde ya da başvuru formunu gönderdiğinizde oluşur.
           </p>
 
@@ -411,9 +412,14 @@ export default function Page() {
                   <td>Süre sonunda silinir</td>
                 </tr>
                 <tr>
-                  <td>Atıl Kapasite Testi yanıtları ve hızlı tahmin girdileri</td>
+                  <td>Hızlı tahmin girdileri</td>
                   <td>Saklanmaz</td>
                   <td>İstek işlendikten sonra kalıcı kayıt oluşmaz</td>
+                </tr>
+                <tr>
+                  <td>Verim Simülasyonu ve test kütüphanesi yanıtları</td>
+                  <td>Sunucuya ulaşmaz</td>
+                  <td>Tarayıcıda işlenir; sayfa kapanınca bellekten silinir</td>
                 </tr>
               </tbody>
             </table>

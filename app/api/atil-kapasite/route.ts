@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 
 import { BodyTooLarge, guard, readJson } from "@/lib/api-guard";
-import { compute, quickEstimate, FORMULA_VERSION } from "@/lib/engine";
+import { quickEstimate } from "@/lib/engine";
 import { calcRequestSchema } from "@/lib/validation";
 
 /**
- * Hesaplama uç noktası.
+ * Hızlı tahmin uç noktası.
  *
- * Mimari-Plan §4.3: hesaplama motoru sunucuda çalışır. Katsayı tablosu
- * şirketin varlığıdır ve istemciye gönderilmez — bu uç nokta yalnızca
- * yuvarlanmış sonucu döndürür.
+ * Mimari-Plan §4.3: hesaplama motoru sunucuda çalışır. Katsayılar şirketin
+ * varlığıdır ve istemciye gönderilmez — bu uç nokta yalnızca yuvarlanmış
+ * sonucu döndürür.
  *
- * Bu istek KAYDEDİLMEZ. Ziyaretçi ayrıntılı rapor talep etmediği sürece
- * girdiler hiçbir yere yazılmaz (bkz. /api/rapor).
+ * Bu istek KAYDEDİLMEZ. Girdiler hiçbir yere yazılmaz. (Simülasyon sayfası
+ * bu ucu kullanmaz; simülasyon ve testler tarayıcıda çalışır, yalnızca
+ * rapor talebi kaydedilir — bkz. /api/rapor.)
  */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Testin en büyük geçerli gövdesi ~700 bayt; 4 KB bol bir tavan. */
+/** Geçerli gövde ~100 bayt; 4 KB bol bir tavan. */
 const MAX_BODY = 4 * 1024;
 
 export async function POST(request: Request) {
@@ -49,17 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Girdiler geçerli aralıkta değil." }, { status: 422 });
   }
 
-  if (parsed.data.mode === "quick") {
-    const { emp, revenueMn, cost } = parsed.data.input;
-    const { ratio, value, payroll } = quickEstimate(emp, revenueMn, cost);
-    return NextResponse.json(
-      { mode: "quick", formulaVersion: FORMULA_VERSION, ratio, value, payroll },
-      { headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
+  const { emp, revenueMn, cost } = parsed.data.input;
   return NextResponse.json(
-    { mode: "full", ...compute(parsed.data.input) },
+    { mode: "quick", ...quickEstimate(emp, revenueMn, cost) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

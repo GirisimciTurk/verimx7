@@ -3,8 +3,12 @@
 **Verimx7 Teknolojileri**'nin B2B tanıtım sitesi. Kurumların atıl kaynaklarını
 (insan kaynağı, fiziksel alan, makine ve teçhizat, doğal ve stratejik kaynak,
 teknoloji) ölçülebilir katma değere dönüştüren "organizasyonel verimetri"
-hizmetini anlatır; ziyaretçiyi bir **Atıl Kapasite Testi** üzerinden nitelikli
-bir değerlendirme başvurusuna taşır.
+hizmetini anlatır; ziyaretçiyi bir **Verim Simülasyonu** (beş kaynak alanında
+beş karar) ve altı testlik bir **test kütüphanesi** üzerinden nitelikli bir
+değerlendirme başvurusuna taşır.
+
+Tasarım, 17 Eylül 2026 tarihli Claude Design kanvasına (Organic tasarım sistemi,
+mavi tema) birebir uygular.
 
 Bu site bir **DEV YAPIMCILIK YAYINCILIK SAN. TİC. LTD. ŞTİ.** iştirakidir.
 
@@ -17,8 +21,8 @@ Bu site bir **DEV YAPIMCILIK YAYINCILIK SAN. TİC. LTD. ŞTİ.** iştirakidir.
 | Yol | Ne yapar |
 |---|---|
 | `/` | Ana sayfa: hizmet, kaynak alanları, model, ölçüm, teslimat, ekip ve değerlendirme başvurusu formu |
-| `/atil-kapasite-testi` | 12 soruluk kendi kendine değerlendirme; sonuç sunucuda hesaplanır |
-| `/pano` | Örnek gösterge panosu — **demo/örnek veridir**, gerçek müşteri verisi değildir |
+| `/atil-kapasite-testi` | **Verim Simülasyonu** (`#test`): sektör seç, beş aşamada beş karar ver; verim endeksi, kazanç eğrisi, radar ve teşhis önerisi. **Test kütüphanesi** (`#testler`): 6 test, 45 soru, anında puan ve olgunluk profili. Her ikisi de tarayıcıda çalışır, hiçbir yanıt sunucuya gitmez |
+| `/pano` | Örnek gösterge panosu — **demo/örnek veridir**, gerçek müşteri verisi değildir. Kanvasta yer almadığı için menü ve alt bilgiden bağlanmaz; yalnızca doğrudan adresle ve site haritasından erişilir |
 | `/kvkk-aydinlatma-metni` | 6698 sayılı KVKK m.10 kapsamında aydınlatma metni |
 | `/gizlilik-ve-veri-guvenligi` | Gizlilik ve veri güvenliği politikası, hizmetin veri mimarisi |
 | `/cerez-politikasi` | Çerez politikası |
@@ -27,9 +31,9 @@ Bu site bir **DEV YAPIMCILIK YAYINCILIK SAN. TİC. LTD. ŞTİ.** iştirakidir.
 
 | Uç | Ne yapar | Kayıt tutar mı |
 |---|---|---|
-| `POST /api/atil-kapasite` | Test girdilerini alır, `lib/engine.ts` ile hesaplar, sonucu döner. `mode: "quick"` (ana sayfadaki üç girdilik hızlı tahmin) ve `mode: "full"` (12 soruluk test) destekler | **Hayır.** Hesaplanıp geri döner, hiçbir yere yazılmaz. Kimlik verisi içermez |
-| `POST /api/basvuru` | Değerlendirme başvurusu: ad soyad, telefon, e-posta, kurum adı, kaynak alanı, açıklama, aydınlatma onayı (zorunlu), ticari ileti izni (ayrı ve opsiyonel) | Evet — yapılandırılan kanallara iletilir |
-| `POST /api/rapor` | Ayrıntılı raporun e-posta ile istenmesi: e-posta adresi + test girdileri + aydınlatma onayı | Evet — yapılandırılan kanallara iletilir |
+| `POST /api/atil-kapasite` | Ana sayfadaki üç girdilik hızlı tahmin (`mode: "quick"`): `lib/engine.ts` ile hesaplar, sonucu döner | **Hayır.** Hesaplanıp geri döner, hiçbir yere yazılmaz. Kimlik verisi içermez |
+| `POST /api/basvuru` | Değerlendirme başvurusu: ad soyad, telefon, e-posta, kurum adı, kaynak alanı, açıklama, aydınlatma onayı (zorunlu), ticari ileti izni (ayrı ve opsiyonel). Yan paneldeki kısa form (`form: "kisa"`: ad, kurum, e-posta, onay) aynı uca gelir | Evet — yapılandırılan kanallara iletilir |
+| `POST /api/rapor` | Simülasyon raporunun e-posta ile istenmesi: e-posta adresi + simülasyon özeti (sektör, endeks, bant, birikimli etki, beş karar, kaçırılan fırsatlar) + aydınlatma onayı | Evet — yapılandırılan kanallara iletilir |
 
 Kaydedilen taleplerde teknik olarak ayrıca IP adresi, tarayıcı bilgisi
 (user-agent), referans (referer) ve zaman damgası yer alır.
@@ -134,9 +138,12 @@ geliştirme kolaylığıdır, teslim güvencesi değildir.
 - [ ] **`/pano` sayfasının örnek/demo veri olduğu açıkça etiketli.** Sayfanın
       üstünde, ekran görüntüsü alındığında da görünecek biçimde. Gerçek müşteri
       verisi izlenimi vermemelidir.
-- [ ] **Test motorunun sonuç aralığı gözden geçirildi.** `lib/engine.ts` uç
-      girdilerde sonucu %45 tavanına doğru sıkıştırır; yayımlanan tahminlerin
-      İş Planı §2.3 (%15–30) aralığıyla tutarlı kaldığını doğrulayın.
+- [ ] **Hızlı tahminin sonuç aralığı gözden geçirildi.** `lib/engine.ts`
+      tavanı %42'dir ve SSS'deki "tipik bant %12–40" ifadesiyle birlikte
+      değişir; ikisinin tutarlı kaldığını doğrulayın.
+- [ ] **`CLAIMS.sevenfold` (`lib/site.ts`) kararı yazılı.** "%700 hedeflenen
+      verim artışı" 17 Eylül 2026 kanvasıyla açıldı; dayanak dosyası hazır
+      değilse anahtarı `false` yapın — sayı ve SSS maddesi siteden kalkar.
 - [ ] **Google Search Console doğrulaması yapıldı ve sitemap gönderildi.**
       Doğrulama yöntemi olarak DNS TXT kaydı veya HTML dosyası tercih edin;
       `Content-Security-Policy` üçüncü taraf script'e izin vermiyor.
@@ -220,17 +227,20 @@ npm run start          # varsayılan olarak 3000 portunu dinler
 
 ## Mimari notlar
 
-**Hesaplama motoru neden sunucuda?**
+**Hızlı tahmin motoru neden sunucuda, simülasyon neden tarayıcıda?**
 `lib/engine.ts` `server-only` ile işaretlidir ve istemciye hiç gönderilmez.
-Katsayı tablosu (sektör çarpanları, kayıp payları, tavan eğrisi) şirketin
-varlığıdır: bugün sektör varsayımıdır, benchmark havuzu doldukça gerçek
-değerlerle değiştirilecektir. Tarayıcıya konulan bir formül, kopyalanabilir bir
-formüldür. Bu yüzden test girdileri `POST /api/atil-kapasite` ile gönderilir,
-geriye yalnızca sonuç döner.
+Katsayıları şirketin varlığıdır: bugün sektör varsayımıdır, benchmark havuzu
+doldukça gerçek değerlerle değiştirilecektir. Tarayıcıya konulan bir formül,
+kopyalanabilir bir formüldür. Bu yüzden hızlı tahmin girdileri
+`POST /api/atil-kapasite` ile gönderilir, geriye yalnızca sonuç döner.
+Verim Simülasyonu ve test kütüphanesi ise (`lib/simulation-data.ts`,
+`lib/test-library-data.ts`) şirketin ölçüm formülünü değil, karar
+alışkanlığını gösteren **temsili** bir anlatıyı taşır; sayfada böyle
+etiketlenir ve tamamen tarayıcıda çalışır — hiçbir karar veya yanıt sunucuya
+gitmez. Yalnızca rapor talebi (`/api/rapor`) sonucun özetini kaydeder.
 
 **Formül neden sürümlü?**
-`FORMULA_VERSION` sabiti her hesabın çıktısında yer alır (hem `quick` hem
-`full` yanıtında) ve rapor talebi kaydıyla birlikte saklanır. Sonuca bağlı
+`FORMULA_VERSION` sabiti her hesabın çıktısında yer alır. Sonuca bağlı
 ücretlendirmede tartışmayı bitiren tek teknik tedbir budur (Mimari-Plan §4.4):
 bir müşterinin **baz dönemi hangi formül sürümüyle hesaplandıysa,
 sonuç ölçümü de aynı sürümle yapılır.** Formül güncellemesi geçmişe uygulanmaz.
@@ -279,7 +289,7 @@ kapsamı dışıdır.
 - **Kalıcı veritabanı yoktur.** Talepler e-posta / webhook / dosya kanallarına
   iletilir; site bir depoya yazmaz. Mimari-Plan §4.3'te (Faz 2) sayılan
   Postgres + CRM'e otomatik kayıt kalemi henüz yapılmadı.
-- **PDF rapor üretimi yoktur.** `/api/rapor` şu an talebi ilgili kanallara
+- **PDF rapor üretimi yoktur.** `/api/rapor` şu an simülasyon özetini ilgili kanallara
   iletir; rapor elle hazırlanıp gönderilir. Şablondan otomatik PDF üretimi
   Mimari-Plan §4.4 uyarınca **Faz 3** kapsamındadır.
 - **CRM entegrasyonu genel amaçlı bir webhook'tan ibarettir.** Fırsat takibi,

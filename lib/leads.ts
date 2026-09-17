@@ -65,19 +65,19 @@ function renderHtml(lead: LeadPayload): string {
   const rows = lead.fields
     .map(
       (f) =>
-        `<tr><td style="padding:6px 14px 6px 0;vertical-align:top;color:#575070;white-space:nowrap">${escapeHtml(
+        `<tr><td style="padding:6px 14px 6px 0;vertical-align:top;color:#4a5c6d;white-space:nowrap">${escapeHtml(
           f.label,
-        )}</td><td style="padding:6px 0;vertical-align:top;color:#1c1730;white-space:pre-wrap">${escapeHtml(
+        )}</td><td style="padding:6px 0;vertical-align:top;color:#14202e;white-space:pre-wrap">${escapeHtml(
           f.value,
         )}</td></tr>`,
     )
     .join("");
 
-  return `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.6;color:#1c1730">
-<h2 style="margin:0 0 16px;font-size:20px;color:#46237c">${escapeHtml(lead.title)}</h2>
+  return `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;line-height:1.6;color:#14202e">
+<h2 style="margin:0 0 16px;font-size:20px;color:#0e3a76">${escapeHtml(lead.title)}</h2>
 <table style="border-collapse:collapse">${rows}</table>
-<hr style="margin:24px 0;border:0;border-top:1px solid #e6e1f2" />
-<p style="font-size:12px;color:#6f6885;margin:0">
+<hr style="margin:24px 0;border:0;border-top:1px solid #dde8f2" />
+<p style="font-size:12px;color:#5f7386;margin:0">
 Alındı: ${escapeHtml(lead.meta.receivedAt)}<br />
 IP: ${escapeHtml(lead.meta.ip)}<br />
 Tarayıcı: ${escapeHtml(lead.meta.userAgent)}<br />

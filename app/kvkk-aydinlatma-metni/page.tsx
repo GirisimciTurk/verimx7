@@ -219,17 +219,16 @@ export default function Page() {
             işlemiyoruz; sehven iletilmesi hâlinde ilgili kısım imha edilir.
           </p>
 
-          <h3>2.2. Atıl Kapasite Testi</h3>
+          <h3>2.2. Verim Simülasyonu, test kütüphanesi ve hızlı tahmin</h3>
 
           <p>
-            Atıl Kapasite Testi, girdileri sunucuda hesaplayıp sonucu tarayıcınıza geri döndüren bir
-            hesaplama aracıdır. <strong>Test istekleri kaydedilmez ve saklanmaz.</strong> Test
-            girdileri kimlik bilgisi içermez; on iki sorunun yanıtı olarak verilen çalışan sayısı,
-            kişi başı ortalama maliyet, kurum tipi, onay katmanı sayısı ve toplantı yükü gibi
-            kuruma ait işletme parametrelerinden oluşur. Testi ad, e-posta veya başka bir kimlik
-            bilgisi vermeden tamamlayabilirsiniz. Ana sayfadaki hızlı tahmin aracı da aynı şekilde
-            çalışır: çalışan sayısı, yıllık ciro ve kişi başı maliyet sunucuda hesaplanır, istek
-            kaydedilmez.
+            Verim Simülasyonu ve test kütüphanesi tamamen tarayıcınızda çalışır:{" "}
+            <strong>seçtiğiniz kurum tipi, verdiğiniz kararlar ve test yanıtları sunucuya
+            gönderilmez, kaydedilmez ve saklanmaz.</strong> Bu araçlar kimlik bilgisi istemez;
+            simülasyonu ve testleri ad, e-posta veya başka bir kimlik bilgisi vermeden
+            tamamlayabilirsiniz. Ana sayfadaki hızlı tahmin aracı ise üç girdiyi (çalışan sayısı,
+            yıllık ciro ve kişi başı maliyet) hesaplanmak üzere sunucuya gönderir; bu girdiler
+            kimlik bilgisi içermez, istek kaydedilmez ve yanıt döndükten sonra saklanmaz.
           </p>
 
           <p>
@@ -258,9 +257,9 @@ export default function Page() {
                 <tr>
                   <td>Müşteri işlem</td>
                   <td>
-                    Rapora esas test girdileri, bu girdilerle hesaplanan sonuç, hesaplamada
-                    kullanılan formül sürümü, aydınlatma onayı kaydı, talep tarihi ve gönderim
-                    kaydı
+                    Rapora esas simülasyon özeti (seçilen kurum tipi, verim endeksi, bant,
+                    birikimli etki, verilen beş karar, kaçırılan fırsatlar, en zayıf ve en güçlü
+                    alan), aydınlatma onayı kaydı, talep tarihi ve gönderim kaydı
                   </td>
                   <td>Talebi ileten kişi ve sistem kaydı</td>
                 </tr>
@@ -277,11 +276,11 @@ export default function Page() {
           </div>
 
           <p>
-            Testin kendisi kaydedilmezken, ayrıntılı rapor talebi kaydedilir: raporu size
+            Simülasyonun kendisi kaydedilmezken, ayrıntılı rapor talebi kaydedilir: raporu size
             iletebilmek ve gönderdiğimizi ispatlayabilmek için e-posta adresiniz ile rapora esas
-            girdilerin birlikte saklanması gerekir. Hesaplanan sonuç ve formül sürümü de aynı
-            kayıtta tutulur; böylece formülün sonraki bir sürümü yayımlandığında size iletilen
-            rakamın hangi sürümle üretildiği sonradan gösterilebilir.
+            simülasyon özetinin birlikte saklanması gerekir. Özet, ekranda gördüğünüz sonucun
+            aynısıdır; tarayıcınızdan sunucuya yalnızca siz &ldquo;Raporu gönder&rdquo; dediğinizde
+            iletilir.
           </p>
 
           <h2>3. Kişisel verilerin işlenme amaçları</h2>
@@ -298,8 +297,8 @@ export default function Page() {
               yanıtlanması.
             </li>
             <li>
-              <strong>Ayrıntılı test raporunun iletilmesi:</strong> talep ettiğiniz raporun
-              hesaplanarak bildirdiğiniz e-posta adresine gönderilmesi ve gönderimin
+              <strong>Ayrıntılı simülasyon raporunun iletilmesi:</strong> talep ettiğiniz raporun
+              hazırlanarak bildirdiğiniz e-posta adresine gönderilmesi ve gönderimin
               doğrulanması.
             </li>
             <li>
@@ -355,7 +354,7 @@ export default function Page() {
                   </td>
                 </tr>
                 <tr>
-                  <td>Ayrıntılı test raporunun hazırlanıp e-posta ile iletilmesi</td>
+                  <td>Ayrıntılı simülasyon raporunun hazırlanıp e-posta ile iletilmesi</td>
                   <td>İletişim, Müşteri işlem</td>
                   <td>
                     m.5/2-c — sözleşmenin kurulmasıyla doğrudan doğruya ilgili olması (talep
@@ -532,7 +531,7 @@ export default function Page() {
                   </td>
                 </tr>
                 <tr>
-                  <td>Ayrıntılı rapor talepleri (e-posta + test girdileri)</td>
+                  <td>Ayrıntılı rapor talepleri (e-posta + simülasyon özeti)</td>
                   <td>Raporun iletilmesinden itibaren 2 yıl</td>
                   <td>Gönderimin ispatı, tekrar taleplerin karşılanması</td>
                 </tr>
@@ -557,9 +556,14 @@ export default function Page() {
                   <td>Kötüye kullanımın tespiti ve bilgi güvenliği</td>
                 </tr>
                 <tr>
-                  <td>Atıl Kapasite Testi istekleri</td>
+                  <td>Hızlı tahmin istekleri</td>
                   <td>Saklanmaz</td>
                   <td>Hesaplama yapılır, sonuç döndürülür, istek kaydedilmez</td>
+                </tr>
+                <tr>
+                  <td>Verim Simülasyonu ve test kütüphanesi</td>
+                  <td>Sunucuya ulaşmaz</td>
+                  <td>Tarayıcıda çalışır; karar ve yanıtlar hiçbir sunucuya gönderilmez</td>
                 </tr>
               </tbody>
             </table>

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 
-import { useCalc } from "@/lib/use-calc";
+import { QUICK_LIMITS } from "@/lib/form-constants";
 import { ROUTES, decimalTR, groupTR } from "@/lib/site";
+import { useCalc } from "@/lib/use-calc";
 
 export type QuickResult = { ratio: number; value: number; payroll: number };
 
@@ -43,8 +44,7 @@ export default function QuickEstimate({ defaults, initial }: Props) {
       <div style={{ display: "grid", gap: "var(--space-1)" }}>
         <span className="card-kicker">Hızlı tahmin</span>
         <span style={{ fontSize: 15, color: "var(--color-neutral-700)" }}>
-          Üç girdiyle, personel maliyetinizin ne kadarının çıktı üretmeyen işe
-          gittiğine dair kaba bir büyüklük tahmini.
+          Üç girdi, beklenen verim artışı ve yıllık karşılığı.
         </span>
       </div>
 
@@ -67,9 +67,9 @@ export default function QuickEstimate({ defaults, initial }: Props) {
             id={ids.emp}
             className="rng"
             type="range"
-            min={20}
-            max={5000}
-            step={10}
+            min={QUICK_LIMITS.emp.min}
+            max={QUICK_LIMITS.emp.max}
+            step={QUICK_LIMITS.emp.step}
             value={emp}
             onChange={(e) => setEmp(Number(e.target.value))}
           />
@@ -93,9 +93,9 @@ export default function QuickEstimate({ defaults, initial }: Props) {
             id={ids.rev}
             className="rng"
             type="range"
-            min={50}
-            max={10000}
-            step={50}
+            min={QUICK_LIMITS.revenueMn.min}
+            max={QUICK_LIMITS.revenueMn.max}
+            step={QUICK_LIMITS.revenueMn.step}
             value={revenueMn}
             onChange={(e) => setRevenueMn(Number(e.target.value))}
           />
@@ -119,9 +119,9 @@ export default function QuickEstimate({ defaults, initial }: Props) {
             id={ids.cost}
             className="rng"
             type="range"
-            min={15000}
-            max={250000}
-            step={1000}
+            min={QUICK_LIMITS.cost.min}
+            max={QUICK_LIMITS.cost.max}
+            step={QUICK_LIMITS.cost.step}
             value={cost}
             onChange={(e) => setCost(Number(e.target.value))}
           />
@@ -159,7 +159,7 @@ export default function QuickEstimate({ defaults, initial }: Props) {
               color: "var(--color-accent-300)",
             }}
           >
-            Atıl payın personel maliyetine oranı
+            Beklenen verim artışı
           </div>
           <div
             style={{
@@ -193,7 +193,7 @@ export default function QuickEstimate({ defaults, initial }: Props) {
               color: "var(--color-accent-300)",
             }}
           >
-            Tahmini yıllık atıl kapasite
+            Yıllık karşılığı
           </div>
           <div
             style={{
@@ -219,11 +219,10 @@ export default function QuickEstimate({ defaults, initial }: Props) {
         }}
       >
         <Link className="btn btn-primary" href={ROUTES.test}>
-          12 soruluk teste geç
+          Verim simülasyonuna geç
         </Link>
         <span style={{ fontSize: 13, color: "var(--color-neutral-700)" }}>
-          Sektör varsayımıyla hesaplanır, teşhis yerine geçmez. Gerçek büyüklük
-          kurum sistemlerinizden gelen veriyle ölçülür.
+          Sektör varsayımıyla hesaplanır, teşhis yerine geçmez.
         </span>
       </div>
     </div>

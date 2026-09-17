@@ -1,26 +1,30 @@
 import { NextResponse } from "next/server";
 
 import { BodyTooLarge, guard, readJson } from "@/lib/api-guard";
-import { compute, sectorLabel } from "@/lib/engine";
 import { deliverLead, hasDeliveryChannel, type LeadPayload } from "@/lib/leads";
-import { CONTACT, formatPercent, formatTL } from "@/lib/site";
-import { CHOICES } from "@/lib/test-config";
+import { SIMULATION_SECTOR_LABELS } from "@/lib/simulation-data";
+import { CONTACT, decimalTR } from "@/lib/site";
 import { fieldErrors, reportRequestSchema } from "@/lib/validation";
 
 /**
- * Ayrıntılı rapor talebi.
+ * Simülasyon raporu talebi.
  *
- * Testin kendisi kayıt tutmaz; ziyaretçi e-posta bırakıp raporu talep ettiğinde
- * girdiler, hesaplanan sonuç ve formül sürümü birlikte kaydedilir. Formül
- * sürümünün saklanması, sonraki bir sürüm yayımlandığında bu hesabın nasıl
- * üretildiğinin yeniden kurulabilmesi içindir (Mimari-Plan §4.4).
+ * Verim Simülasyonu tarayıcıda çalışır ve kayıt tutmaz; ziyaretçi e-posta
+ * bırakıp ayrıntılı rapor istediğinde sonucun özeti (sektör, endeks, bant,
+ * birikimli etki, izlenen yol, kaçırılan fırsatlar) e-posta adresiyle
+ * birlikte kaydedilir. Amaç raporu iletebilmek ve gönderimi ispatlamaktır.
  */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** E-posta + 12 girdi; 8 KB bol bir tavan. */
+/** E-posta + beş kararlık özet; 8 KB bol bir tavan. */
 const MAX_BODY = 8 * 1024;
+
+function signedMn(value: number): string {
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  return `${sign}${decimalTR(Math.abs(value))} mn ₺`;
+}
 
 export async function POST(request: Request) {
   const gate = guard(request, "rapor", {
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { email, input, website } = parsed.data;
+  const { email, simulation, website } = parsed.data;
 
   if (website) {
     return NextResponse.json({ ok: true });
@@ -70,46 +74,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = compute(input);
-  const systems = [
-    input.systems.erp && "ERP",
-    input.systems.ticket && "Ticket / iş akışı",
-    input.systems.hr && "İK / bordro",
-    input.systems.calendar && "Kurumsal takvim",
-  ].filter(Boolean) as string[];
-
   // Günlüklerde kişisel veri yerine anılacak kısa referans.
   const ref = crypto.randomUUID().slice(0, 8);
+  const sectorLabel = SIMULATION_SECTOR_LABELS[simulation.sector];
 
   const lead: LeadPayload = {
     kind: "rapor",
     ref,
-    title: `Atıl Kapasite Testi rapor talebi — ${formatTL(result.total)}`,
+    title: `Verim Simülasyonu rapor talebi — ${sectorLabel} · endeks ${simulation.index}`,
     fields: [
       { label: "E-posta", value: email },
-      { label: "Kurum tipi", value: sectorLabel(input.sector) },
-      { label: "Tahmini yıllık atıl kapasite", value: formatTL(result.total) },
-      { label: "Personel maliyetine oranı", value: formatPercent(result.ratio * 100) },
-      { label: "Zaman kaybı", value: formatTL(result.time) },
-      { label: "Eşleşme kaybı", value: formatTL(result.match) },
-      { label: "Kadro kaybı", value: formatTL(result.staff) },
-      { label: "Formül sürümü", value: result.formulaVersion },
-      { label: "S01 Çalışan sayısı", value: `${input.emp} kişi` },
-      { label: "S02 Kişi başı aylık maliyet", value: formatTL(input.cost) },
-      { label: "S03 Kontrol alanı", value: CHOICES.span[input.span]! },
-      { label: "S04 Onay katmanı", value: `${input.layers} adım` },
-      { label: "S05 Haftalık toplantı", value: `${input.meet} saat` },
-      { label: "S06 Kararsız biten toplantı", value: CHOICES.dec[input.dec]! },
-      { label: "S07 Yapısal fazla mesai", value: `%${input.overtime}` },
-      { label: "S08 Gönüllü devir", value: `%${input.turnover}` },
-      { label: "S09 Boş kadro süresi", value: CHOICES.vac[input.vac]! },
-      { label: "S10 Yeniden yapılan iş", value: `%${input.rework}` },
-      { label: "S11 Verime ulaşma süresi", value: CHOICES.ramp[input.ramp]! },
-      { label: "S12 Sistem kaynakları", value: systems.length ? systems.join(", ") : "Yok" },
-      { label: "Ölçülebilirlik", value: `${result.measurableLabel} (${result.measurableCount}/4)` },
+      { label: "Kurum tipi", value: sectorLabel },
+      { label: "Verim endeksi", value: `${simulation.index} / 100` },
+      { label: "Bant", value: simulation.band },
+      { label: "Birikimli etki", value: signedMn(simulation.cashMn) },
+      { label: "En zayıf alan", value: simulation.weakest },
+      { label: "En güçlü alan", value: simulation.strongest },
+      ...simulation.path.map((step, i) => ({
+        label: `Karar ${i + 1} · ${step.area}`,
+        value: `${step.label} — ${step.effect}`,
+      })),
+      {
+        label: "Kaçırılan fırsatlar",
+        value: simulation.missed.length ? simulation.missed.join("\n") : "Yok",
+      },
       { label: "Aydınlatma onayı", value: "Verildi" },
     ],
-    raw: { email, input, result },
+    raw: { email, simulation },
     meta: {
       receivedAt: new Date().toISOString(),
       ip: gate.identity.display,

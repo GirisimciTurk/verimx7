@@ -35,6 +35,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Docker imajı için yalın, kendi kendine yeten sunucu çıktısı.
+  output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
   images: {

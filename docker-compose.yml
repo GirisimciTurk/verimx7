@@ -1,0 +1,57 @@
+# Verimx7 — izole üretim yığını (web + Caddy).
+# Kendi bridge ağında çalışır; başka proje bu ağa bağlanmaz.
+# Sunucuya yalnızca Caddy 80/443 açar; web yalnızca iç ağda.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://verimx7.com}
+    image: verimx7-web
+    container_name: verimx7-web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Önde tek ters vekil (Caddy) var: X-Forwarded-For'un sağdan 1. değeri.
+      TRUST_PROXY: "1"
+      # Taleplerin dosyaya yazılacağı dizin (LEAD_LOG_DIR kanalı; .env'den gelir).
+      LEAD_LOG_DIR: ${LEAD_LOG_DIR:-/var/lib/verimx7/leads}
+    volumes:
+      - leads_data:/var/lib/verimx7/leads
+    expose:
+      - "3000"
+    networks:
+      - verimx7_net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: verimx7-caddy
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-verimx7.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - verimx7_net
+
+networks:
+  verimx7_net:
+    name: verimx7_net
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+  leads_data:

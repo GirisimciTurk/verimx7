@@ -1,0 +1,91 @@
+# Verimx7 — main'e her push'ta derleme kontrolü + Hostinger VPS'e dağıtım.
+#
+# Sunucu: /opt/verimx7 (git deposu değil; kaynak rsync ile gelir).
+# Sunucudaki .env asla ezilmez/silinmez. İmaj sunucuda derlenir
+# (docker compose up -d --build web); Caddy'ye dokunulmaz.
+#
+# Gerekli repo secret'ları:
+#   VPS_HOST         145.14.158.151
+#   VPS_SSH_KEY      dağıtım anahtarının özel kısmı (ed25519)
+#   VPS_KNOWN_HOSTS  `ssh-keyscan 145.14.158.151` çıktısı
+# Secret'lar yoksa dağıtım adımı atlanır, yalnızca derleme kontrolü çalışır.
+
+name: Derle ve dağıt
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Derleme kontrolü
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SITE_URL: https://verimx7.com
+
+  deploy:
+    name: VPS'e dağıt
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      HAS_KEY: ${{ secrets.VPS_SSH_KEY != '' }}
+    steps:
+      - name: Secret kontrolü
+        if: env.HAS_KEY != 'true'
+        run: echo "::warning::VPS_SSH_KEY tanımlı değil; dağıtım atlandı."
+
+      - uses: actions/checkout@v4
+        if: env.HAS_KEY == 'true'
+
+      - name: SSH hazırlığı
+        if: env.HAS_KEY == 'true'
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Kaynağı sunucuya eşitle
+        if: env.HAS_KEY == 'true'
+        run: |
+          rsync -az --delete --no-owner --no-group \
+            --exclude '.git/' --exclude '.github/' \
+            --exclude 'node_modules/' --exclude '.next/' \
+            --exclude '.env' --exclude '.env*.local' \
+            --exclude 'pics/' --exclude 'belgeler/' --exclude '*.zip' \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
+            ./ root@${{ secrets.VPS_HOST }}:/opt/verimx7/
+
+      - name: Yeniden derle ve başlat
+        if: env.HAS_KEY == 'true'
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes root@${{ secrets.VPS_HOST }} '
+            set -e
+            cd /opt/verimx7
+            docker compose up -d --build web
+            docker image prune -f >/dev/null
+            for i in $(seq 1 30); do
+              if docker compose exec -T web wget -q --spider http://127.0.0.1:3000/; then
+                echo "Sağlık kontrolü geçti"; exit 0
+              fi
+              sleep 2
+            done
+            echo "Sağlık kontrolü başarısız"; docker compose logs --tail 50 web; exit 1
+          '

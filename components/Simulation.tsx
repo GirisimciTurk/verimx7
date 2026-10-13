@@ -368,8 +368,8 @@ export default function Simulation() {
           }}
         >
           <Image
-            src="/img/genel_uretim.jpg"
-            alt="Üretim tesisi ve lojistik akışını gösteren kurumsal saha görünümü"
+            src="/img/bos_fabrika.jpg"
+            alt="Tavanı ışıklıklı, bomboş ve geniş bir fabrika holü"
             fill
             priority
             sizes="(max-width: 1200px) 100vw, 1120px"

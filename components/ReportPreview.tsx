@@ -163,7 +163,7 @@ export default function ReportPreview() {
             }}
           >
             <Image
-              src="/img/verim2.jpg"
+              src="/img/rapor.jpg"
               alt="Teşhis dosyasından örnek bir analiz sayfası görünümü"
               fill
               sizes="(max-width: 1080px) 100vw, 560px"

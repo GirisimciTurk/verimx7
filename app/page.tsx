@@ -12,7 +12,6 @@ import ReportPreview from "@/components/ReportPreview";
 import SideForm from "@/components/SideForm";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNav from "@/components/SiteNav";
-import TiltImage from "@/components/TiltImage";
 import { quickEstimate } from "@/lib/engine";
 import { QUICK_LIMITS } from "@/lib/form-constants";
 import { BRAND, CLAIMS, ROUTES, SECTIONS, SITE_URL } from "@/lib/site";
@@ -32,32 +31,32 @@ const AREAS = [
   {
     title: "İnsan Kaynağı Verimetrisi",
     body: "Yetkinlik–görev uyumu ve gizli kapasite",
-    src: "/img/insan1.jpg",
-    alt: "Ekranlarında verimlilik grafikleri açık bir çalışma masasında oturan çalışan",
+    src: "/img/ekip_ofis.jpg",
+    alt: "Açık ofiste bilgisayar başında çalışan, yer yer boş masaların göründüğü ekip",
   },
   {
     title: "Fiziksel Alan ve Bina Verimetrisi",
     body: "Yeniden konfigürasyon ve kapasite artışı",
-    src: "/img/sokakta.jpg",
-    alt: "Kent içi toplu taşıma durağı ve dijital bilgilendirme ekranı",
+    src: "/img/bos_ofis.jpg",
+    alt: "Kullanılmayan, boş ve aydınlık bir ofis katı",
   },
   {
     title: "Makine ve Teçhizat Verimetrisi",
     body: "Duruş, düşük çalışma ve konumlandırma analizi",
-    src: "/img/sanayi.jpg",
-    alt: "Ağır sanayi tesisinde bakım yapan teknisyen ve büyük dişli grubu",
+    src: "/img/makine_salonu.jpg",
+    alt: "Sıra sıra eski makinelerin durduğu, çalışmayan bir makine salonu",
   },
   {
     title: "Doğal ve Stratejik Kaynak Verimetrisi",
     body: "Atıl rezervlerin ekonomik değere dönüşümü",
-    src: "/img/tarim1.jpg",
-    alt: "Sulanan tarım arazisinde tabletle veri toplayan üretici",
+    src: "/img/tarla.jpg",
+    alt: "Hasattan sonra boş kalmış tarlaların kuşbakışı görünümü",
   },
   {
     title: "Teknoloji Verimetrisi",
     body: "Aynı teknolojiyle daha fazla verim",
-    src: "/img/ortam.jpg",
-    alt: "Şehir planlama merkezinde büyük veri duvarını inceleyen ekip",
+    src: "/img/veri_merkezi.jpg",
+    alt: "Sıra sıra sunucu dolaplarının bulunduğu bir veri merkezi",
   },
 ] as const;
 
@@ -133,20 +132,20 @@ const SITUATIONS = [
   {
     quote: "“Ekip yetmiyor, kadro büyütmemiz gerek.”",
     body: "Önce mevcut kadronun ne kadarının asıl işe gittiğini ölçüyoruz. Onay katmanı ve toplantı yükü çıktığında genelde kadro yetiyor.",
-    src: "/img/verim3.jpg",
-    alt: "Toplantı masası etrafında verimlilik grafiklerini tartışan ekip",
+    src: "/img/toplanti.jpg",
+    alt: "Toplantı masasında dizüstü bilgisayarların başında not alan eller",
   },
   {
     quote: "“Kapasiteyi artırmak için yeni yatırım şart.”",
     body: "Mevcut hattın gerçek etkinliğini ölçüyoruz. Duruş ve hazırlık kayıpları alındığında yatırım kararı çoğu zaman erteleniyor.",
-    src: "/img/sanayi.jpg",
-    alt: "Ağır sanayi tesisinde bakım yapan teknisyen ve büyük dişli grubu",
+    src: "/img/uretim_hatti.jpg",
+    alt: "Makinelerle dolu geniş bir üretim tesisi",
   },
   {
     quote: "“Verimsizlik var ama nerede olduğunu bilmiyoruz.”",
     body: "Beş günde kayıp haritası çıkıyor: hangi süreçte, ne kadar, hangi veriye dayanarak. Tartışma oradan sonra somutlaşıyor.",
-    src: "/img/verim2.jpg",
-    alt: "Analiz ekranı önünde kayıp kalemlerini inceleyen uzman",
+    src: "/img/analiz_ekrani.jpg",
+    alt: "Grafiklerin açık olduğu bir ekranda verileri inceleyen ekip",
   },
 ] as const;
 
@@ -246,11 +245,16 @@ export default function HomePage() {
             defaults={QUICK_DEFAULTS}
             initial={{ ratio: quick.ratio, value: quick.value, payroll: quick.payroll }}
           />
-          <TiltImage
-            src="/img/genel_uretim.jpg"
-            alt="Üretim tesisi ve lojistik akışını gösteren kurumsal saha görünümü"
-            priority
-          />
+          <div className="hero-photo">
+            <Image
+              src="/img/atil_bina.jpg"
+              alt="Camları kırık, kullanılmayan çok katlı büyük bir bina cephesi"
+              fill
+              priority
+              sizes="(max-width: 1080px) calc(100vw - 56px), 540px"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
         </section>
 
         {/* ── Geniş bant görsel ─────────────────────────────────────── */}
@@ -260,8 +264,8 @@ export default function HomePage() {
             style={{ position: "relative", height: 380, borderRadius: "var(--radius-lg)", overflow: "hidden" }}
           >
             <Image
-              src="/img/genel_uretim.jpg"
-              alt="Üretim tesisi, lojistik akışı ve kapasite artışını gösteren geniş kadraj"
+              src="/img/bos_fabrika.jpg"
+              alt="Tavanı ışıklıklı, bomboş ve geniş bir fabrika holü"
               fill
               sizes="(max-width: 1200px) 100vw, 1120px"
               style={{ objectFit: "cover" }}
@@ -411,8 +415,8 @@ export default function HomePage() {
             }}
           >
             <Image
-              src="/img/verim.jpg"
-              alt="Verimlilik akış şemasını beyaz tahtada anlatan ekip"
+              src="/img/beyaz_tahta.jpg"
+              alt="Beyaz tahta başında süreci anlatan kişiyi dinleyen ekip"
               fill
               sizes="(max-width: 1200px) 100vw, 1120px"
               style={{ objectFit: "cover" }}
@@ -718,8 +722,8 @@ export default function HomePage() {
                 }}
               >
                 <Image
-                  src="/img/verim3.jpg"
-                  alt="Ofis ortamında verimlilik hedeflerini konuşan ekip"
+                  src="/img/istanbul_levent.jpg"
+                  alt="Önde Kız Kulesi, arkada Levent gökdelenleriyle İstanbul silueti"
                   fill
                   sizes="(max-width: 1080px) 100vw, 400px"
                   style={{ objectFit: "cover" }}

@@ -802,20 +802,16 @@ textarea.input {
   display: grid;
   grid-template-columns: minmax(340px, 1.05fr) 0.95fr;
   gap: 72px;
-  align-items: center;
+  align-items: stretch;
   padding-top: 0;
 }
-.hero-media {
-  perspective: 1000px;
-}
-.hero-media-inner {
-  border-radius: 50%;
-  overflow: hidden;
-  aspect-ratio: 1 / 1;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.15s ease-out;
-  transform-style: preserve-3d;
+/* Sağ sütunu baştan sona dolduran görsel; yüksekliği soldaki karttan alır. */
+.hero-photo {
   position: relative;
+  min-height: 520px;
+  border-radius: calc(var(--radius-lg) * 1.3);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .grid-3 {
@@ -1684,10 +1680,9 @@ textarea.input {
     width: calc(100% - 32px);
     padding: var(--space-3) 20px;
   }
-  .hero-media {
-    max-width: 420px;
-    margin-inline: auto;
-    width: 100%;
+  .hero-photo {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
   }
 }
 

@@ -1,0 +1,14 @@
+# Verimx7 — Caddy ters vekil + otomatik HTTPS (Let's Encrypt).
+# APP_DOMAIN docker-compose üzerinden gelir (varsayılan verimx7.com).
+# Güvenlik başlıkları (HSTS, CSP, X-Frame-Options ...) uygulama katmanında
+# next.config.ts içinde set edilir; Caddy yalnızca kendi Server başlığını siler.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+	header -Server
+}
+
+www.{$APP_DOMAIN} {
+	redir https://{$APP_DOMAIN}{uri} permanent
+}

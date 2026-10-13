@@ -1,0 +1,114 @@
+# Verimx7 — EspoCRM, yalnızca yerel geliştirme makinesinde.
+# Resmî espocrm-docker örneğinden uyarlandı: uygulama + daemon (cron/işler)
+# + websocket + MariaDB. Sunucuya gitmez (CI rsync'i espocrm/'ı hariç tutar).
+#
+# Sırlar bu dizindeki .env'de (gitignore'da). Yalnızca 127.0.0.1 açılır:
+#   http://localhost:3030  (web)   ws://localhost:3031  (websocket)
+#
+# Başlat:   cd espocrm && docker compose up -d
+# Durdur:   docker compose stop   (veriler kalır; `down -v` verileri siler)
+# Yönetici: kullanıcı adı ve şifre .env içinde (ESPOCRM_ADMIN_*); yalnızca
+#           ilk kurulumda uygulanır, sonra şifre arayüzden değiştirilir.
+
+name: verimx7-espocrm
+
+# EspoCRM 10: /var/www/html değil, yalnızca bu üç dizin kalıcıdır.
+x-espo-volumes: &espo-volumes
+  - espocrm-data:/var/www/html/data
+  - espocrm-custom:/var/www/html/custom
+  - espocrm-custom-client:/var/www/html/client/custom
+
+x-espo-healthcheck: &espo-healthcheck
+  test: ["CMD", "bin/command", "app-check"]
+  start_period: 30s
+  interval: 60s
+  timeout: 20s
+  retries: 3
+
+services:
+  db:
+    image: mariadb:${MARIADB_TAG:-lts}
+    container_name: espocrm-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: espocrm
+      MARIADB_USER: espocrm
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - espocrm-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      start_period: 20s
+      timeout: 10s
+      retries: 10
+
+  espocrm:
+    image: espocrm/espocrm:${TAG:-10.0.9}
+    container_name: espocrm
+    restart: unless-stopped
+    environment:
+      ESPOCRM_DATABASE_PLATFORM: Mysql
+      ESPOCRM_DATABASE_HOST: db
+      ESPOCRM_DATABASE_NAME: espocrm
+      ESPOCRM_DATABASE_USER: espocrm
+      ESPOCRM_DATABASE_PASSWORD: ${DB_PASSWORD}
+      ESPOCRM_ADMIN_USERNAME: ${ESPOCRM_ADMIN_USERNAME:-admin}
+      ESPOCRM_ADMIN_PASSWORD: ${ESPOCRM_ADMIN_PASSWORD}
+      ESPOCRM_SITE_URL: http://localhost:3030
+      # Türkiye yerel ayarları (yalnızca ilk kurulumda uygulanır).
+      ESPOCRM_LANGUAGE: tr_TR
+      ESPOCRM_TIME_ZONE: Europe/Istanbul
+      ESPOCRM_DEFAULT_CURRENCY: TRY
+      ESPOCRM_DATE_FORMAT: DD.MM.YYYY
+      ESPOCRM_TIME_FORMAT: HH:mm
+      ESPOCRM_WEEK_START: 1
+      ESPOCRM_DECIMAL_MARK: ","
+      ESPOCRM_THOUSAND_SEPARATOR: "."
+      ESPOCRM_CONFIG_USE_WEB_SOCKET: "true"
+      ESPOCRM_CONFIG_WEB_SOCKET_URL: ws://localhost:3031
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN: "tcp://*:7777"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN: "tcp://websocket:7777"
+    volumes: *espo-volumes
+    healthcheck: *espo-healthcheck
+    ports:
+      - "127.0.0.1:3030:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  daemon:
+    image: espocrm/espocrm:${TAG:-10.0.9}
+    container_name: espocrm-daemon
+    restart: unless-stopped
+    entrypoint: docker-daemon.sh
+    volumes: *espo-volumes
+    healthcheck: *espo-healthcheck
+    depends_on:
+      espocrm:
+        condition: service_healthy
+
+  websocket:
+    image: espocrm/espocrm:${TAG:-10.0.9}
+    container_name: espocrm-websocket
+    restart: unless-stopped
+    entrypoint: docker-websocket.sh
+    environment:
+      ESPOCRM_CONFIG_USE_WEB_SOCKET: "true"
+      ESPOCRM_CONFIG_WEB_SOCKET_URL: ws://localhost:3031
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN: "tcp://*:7777"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN: "tcp://websocket:7777"
+    volumes: *espo-volumes
+    healthcheck: *espo-healthcheck
+    ports:
+      - "127.0.0.1:3031:8080"
+    depends_on:
+      espocrm:
+        condition: service_healthy
+
+volumes:
+  espocrm-db:
+  espocrm-data:
+  espocrm-custom:
+  espocrm-custom-client:

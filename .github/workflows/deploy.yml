@@ -3,7 +3,7 @@
 # Sunucu: /opt/verimx7 (git deposu değil; kaynak rsync ile gelir).
 # Sunucudaki .env asla ezilmez/silinmez. İmaj sunucuda derlenir
 # (docker compose up -d --build web); Caddy yalnızca Caddyfile değiştiyse
-# yeniden başlatılır. crm/ (Twenty CRM) yalnızca yerelde çalışır, sunucuya gitmez.
+# yeniden başlatılır. crm/ (Twenty) ve espocrm/ yalnızca yerelde çalışır, sunucuya gitmez.
 #
 # Gerekli repo secret'ları:
 #   VPS_HOST         145.14.158.151
@@ -70,7 +70,7 @@ jobs:
             --exclude '.git/' --exclude '.github/' \
             --exclude 'node_modules/' --exclude '.next/' \
             --exclude '.env' --exclude '.env*.local' \
-            --exclude 'pics/' --exclude 'belgeler/' --exclude 'crm/' --exclude '*.zip' \
+            --exclude 'pics/' --exclude 'belgeler/' --exclude 'crm/' --exclude 'espocrm/' --exclude '*.zip' \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
             ./ root@${{ secrets.VPS_HOST }}:/opt/verimx7/
 

@@ -1,0 +1,108 @@
+# Verimx7 — Twenty CRM (crm.verimx7.com).
+# Resmî twenty-docker yığınından uyarlandı: server + worker + Postgres + Redis.
+#
+# Sunucuda /opt/verimx7/crm altında çalışır; sırlar aynı dizindeki .env'de
+# (rsync .env'i hariç tutar, CI ona dokunmaz). Hiçbir port dışarı açılmaz:
+# yalnızca twenty-server, Caddy'nin ulaşabilmesi için verimx7_net'e katılır;
+# db ve redis kendi iç ağında kalır.
+#
+# Elle başlatma:  cd /opt/verimx7/crm && docker compose up -d
+# Sürüm yükseltme: .env içindeki TAG'i değiştir, sonra up -d.
+
+name: verimx7-crm
+
+x-twenty-env: &twenty-env
+  PG_DATABASE_URL: postgres://${PG_DATABASE_USER:-postgres}:${PG_DATABASE_PASSWORD}@db:5432/${PG_DATABASE_NAME:-default}
+  SERVER_URL: ${SERVER_URL:-https://crm.verimx7.com}
+  REDIS_URL: redis://redis:6379
+  STORAGE_TYPE: local
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  FALLBACK_ENCRYPTION_KEY: ${FALLBACK_ENCRYPTION_KEY:-}
+
+services:
+  server:
+    image: twentycrm/twenty:${TAG:-v2.46.0}
+    container_name: twenty-server
+    restart: unless-stopped
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    environment:
+      <<: *twenty-env
+      NODE_PORT: 3000
+    expose:
+      - "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:3000/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    networks:
+      - internal
+      - verimx7_net
+
+  worker:
+    image: twentycrm/twenty:${TAG:-v2.46.0}
+    container_name: twenty-worker
+    restart: unless-stopped
+    command: ["yarn", "worker:prod"]
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    environment:
+      <<: *twenty-env
+      # Migration ve cron kaydı server'da çalışır.
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+    networks:
+      - internal
+
+  db:
+    image: postgres:16
+    container_name: twenty-db
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${PG_DATABASE_NAME:-default}
+      POSTGRES_USER: ${PG_DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_DATABASE_PASSWORD}
+    healthcheck:
+      test: pg_isready -U ${PG_DATABASE_USER:-postgres} -h localhost -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: twenty-redis
+    restart: unless-stopped
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+networks:
+  internal:
+  # Ana yığının (../docker-compose.yml) ağı; Caddy buradan twenty-server:3000'e gider.
+  verimx7_net:
+    external: true
+
+volumes:
+  db-data:
+  server-local-data:

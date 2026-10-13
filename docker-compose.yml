@@ -1,5 +1,5 @@
 # Verimx7 — izole üretim yığını (web + Caddy).
-# Kendi bridge ağında çalışır; başka proje bu ağa bağlanmaz.
+# Kendi bridge ağında çalışır; dışarıdan yalnızca CRM sunucusu (crm/) bu ağa katılır.
 # Sunucuya yalnızca Caddy 80/443 açar; web yalnızca iç ağda.
 
 services:

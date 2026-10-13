@@ -2,7 +2,9 @@
 #
 # Sunucu: /opt/verimx7 (git deposu değil; kaynak rsync ile gelir).
 # Sunucudaki .env asla ezilmez/silinmez. İmaj sunucuda derlenir
-# (docker compose up -d --build web); Caddy'ye dokunulmaz.
+# (docker compose up -d --build web); Caddy yalnızca Caddyfile değiştiyse
+# yeniden başlatılır. CRM yığını (crm/) dosya olarak gider ama CI onu
+# yeniden başlatmaz; sırları /opt/verimx7/crm/.env'dedir.
 #
 # Gerekli repo secret'ları:
 #   VPS_HOST         145.14.158.151
@@ -81,6 +83,11 @@ jobs:
             cd /opt/verimx7
             docker compose up -d --build web
             docker image prune -f >/dev/null
+            # Caddyfile tek dosya bind-mount; rsync yeni inode yazar, bu yüzden
+            # değiştiyse Caddy yeniden başlatılır (yoksa eski dosyayı görür).
+            if ! docker compose exec -T caddy cat /etc/caddy/Caddyfile | cmp -s - Caddyfile; then
+              docker compose restart caddy
+            fi
             for i in $(seq 1 30); do
               if docker compose exec -T web wget -q --spider http://127.0.0.1:3000/; then
                 echo "Sağlık kontrolü geçti"; exit 0

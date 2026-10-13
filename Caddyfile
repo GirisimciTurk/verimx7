@@ -12,3 +12,10 @@
 www.{$APP_DOMAIN} {
 	redir https://{$APP_DOMAIN}{uri} permanent
 }
+
+# Twenty CRM (crm/docker-compose.yml); twenty-server verimx7_net'e katılır.
+crm.{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy twenty-server:3000
+	header -Server
+}

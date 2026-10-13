@@ -1,19 +1,18 @@
-# Verimx7 — Twenty CRM (crm.verimx7.com).
+# Verimx7 — Twenty CRM, yalnızca yerel geliştirme makinesinde.
 # Resmî twenty-docker yığınından uyarlandı: server + worker + Postgres + Redis.
+# Sunucuya gitmez (CI rsync'i crm/'ı hariç tutar).
 #
-# Sunucuda /opt/verimx7/crm altında çalışır; sırlar aynı dizindeki .env'de
-# (rsync .env'i hariç tutar, CI ona dokunmaz). Hiçbir port dışarı açılmaz:
-# yalnızca twenty-server, Caddy'nin ulaşabilmesi için verimx7_net'e katılır;
-# db ve redis kendi iç ağında kalır.
+# Sırlar bu dizindeki .env'de (gitignore'da). Yalnızca 127.0.0.1:3020 açılır.
 #
-# Elle başlatma:  cd /opt/verimx7/crm && docker compose up -d
-# Sürüm yükseltme: .env içindeki TAG'i değiştir, sonra up -d.
+# Başlat:   cd crm && docker compose up -d     → http://localhost:3020
+# Durdur:   docker compose stop   (veriler kalır; `down -v` verileri siler)
+# Sürüm:    .env içindeki TAG'i değiştir, sonra up -d.
 
 name: verimx7-crm
 
 x-twenty-env: &twenty-env
   PG_DATABASE_URL: postgres://${PG_DATABASE_USER:-postgres}:${PG_DATABASE_PASSWORD}@db:5432/${PG_DATABASE_NAME:-default}
-  SERVER_URL: ${SERVER_URL:-https://crm.verimx7.com}
+  SERVER_URL: ${SERVER_URL:-http://localhost:3020}
   REDIS_URL: redis://redis:6379
   STORAGE_TYPE: local
   ENCRYPTION_KEY: ${ENCRYPTION_KEY}
@@ -29,8 +28,8 @@ services:
     environment:
       <<: *twenty-env
       NODE_PORT: 3000
-    expose:
-      - "3000"
+    ports:
+      - "127.0.0.1:3020:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -42,9 +41,6 @@ services:
       timeout: 5s
       retries: 30
       start_period: 120s
-    networks:
-      - internal
-      - verimx7_net
 
   worker:
     image: twentycrm/twenty:${TAG:-v2.46.0}
@@ -63,8 +59,6 @@ services:
         condition: service_healthy
       server:
         condition: service_healthy
-    networks:
-      - internal
 
   db:
     image: postgres:16
@@ -81,8 +75,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - internal
 
   redis:
     image: redis:7-alpine
@@ -94,14 +86,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - internal
-
-networks:
-  internal:
-  # Ana yığının (../docker-compose.yml) ağı; Caddy buradan twenty-server:3000'e gider.
-  verimx7_net:
-    external: true
 
 volumes:
   db-data:

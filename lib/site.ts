@@ -89,6 +89,9 @@ export const GROUP_LINKS = [
 
 /** Ana sayfa içi bölüm çapaları. */
 export const SECTIONS = {
+  /** Tam ekran açılış videosu (components/StoryVideo.tsx). */
+  acilis: "acilis",
+  giris: "giris",
   alanlar: "alanlar",
   model: "model",
   olcum: "olcum",

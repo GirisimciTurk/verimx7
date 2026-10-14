@@ -229,8 +229,11 @@ export default function HomePage() {
       <SideForm />
 
       <main id="icerik">
+        {/* ── Tam ekran açılış videosu ──────────────────────────────── */}
+        <StoryVideo next={SECTIONS.giris} />
+
         {/* ── Başlık ────────────────────────────────────────────────── */}
-        <section className="lp-sec" style={{ paddingTop: 56, paddingBottom: 40 }}>
+        <section id={SECTIONS.giris} className="lp-sec" style={{ paddingTop: 56, paddingBottom: 40 }}>
           <span className="tag tag-outline" style={{ marginBottom: "var(--space-4)" }}>
             {BRAND} Teknolojileri
           </span>
@@ -256,11 +259,6 @@ export default function HomePage() {
               style={{ objectFit: "cover" }}
             />
           </div>
-        </section>
-
-        {/* ── Hikâye videosu ────────────────────────────────────────── */}
-        <section className="lp-sec" style={{ paddingTop: 0, paddingBottom: 0 }}>
-          <StoryVideo />
         </section>
 
         {/* ── Değer önerisi ─────────────────────────────────────────── */}

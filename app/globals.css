@@ -814,31 +814,84 @@ textarea.input {
   box-shadow: var(--shadow-md);
 }
 
-/* ── hikâye videosu: genişte 16:9, darda 9:16 ─────────────────────────── */
-.story-video {
-  margin: 0;
-}
-.story-video video {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius-lg);
+/* ── tam ekran açılış videosu ────────────────────────────────────────
+   Bölüm menünün arkasına uzanır (--nav-offset: menünün üst boşluğu +
+   yüksekliği, her genişlikte 63.25px); video menünün altında kalan alana
+   kırpılmadan sığdırılır. Yatay ekranda 16:9, dikey ekranda 9:16 sürüm. */
+.opener {
+  --nav-offset: 63.25px;
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  min-height: 420px;
+  margin-top: calc(-1 * var(--nav-offset));
+  padding-top: var(--nav-offset);
   background: var(--color-accent-900);
-  box-shadow: var(--shadow-md);
 }
-.story-video .story-video-dikey {
+.opener-frame {
+  position: relative;
+  height: 100%;
+}
+.opener video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.opener .opener-dikey {
   display: none;
 }
-@media (max-width: 720px) {
-  .story-video .story-video-yatay {
+@media (max-aspect-ratio: 1/1) {
+  .opener .opener-yatay {
     display: none;
   }
-  /* Dikey video ekranın boyunu aşmasın; yapışkan menüye yer kalsın. */
-  .story-video .story-video-dikey {
+  .opener .opener-dikey {
     display: block;
-    width: min(100%, calc((100svh - 120px) * 9 / 16));
-    margin-inline: auto;
   }
+}
+.opener-toggle,
+.opener-next {
+  position: absolute;
+  bottom: var(--space-6);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--color-bg);
+  background: color-mix(in srgb, var(--color-accent-900) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-bg) 35%, transparent);
+  backdrop-filter: blur(8px);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.opener-toggle {
+  left: var(--space-6);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.opener-next {
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 18px 10px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.opener-next svg {
+  animation: nudge 1.8s ease-in-out infinite;
+}
+@keyframes nudge {
+  50% {
+    transform: translateY(3px);
+  }
+}
+.opener-toggle:focus-visible,
+.opener-next:focus-visible {
+  outline: 3px solid var(--color-accent-300);
+  outline-offset: 2px;
 }
 
 .grid-3 {

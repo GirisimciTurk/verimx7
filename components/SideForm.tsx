@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import { FIELD_RULES, checkEmail, checkText } from "@/lib/form-constants";
-import { ROUTES } from "@/lib/site";
+import { ROUTES, SECTIONS } from "@/lib/site";
 
 type Status = "idle" | "sending" | "sent";
 
@@ -19,6 +19,10 @@ const OPEN_MIN_WIDTH = 1240;
  * gelmesi gereken ekranlarda panel ilk karede kayarak açılır, böylece
  * hidrasyon uyuşmazlığı olmaz.
  *
+ * Ana sayfada tam ekran açılış videosu varken panel videonun üstüne
+ * açılmaz; video ekrandan çıkınca bir kez açılır (kullanıcı o ana kadar
+ * sekmeye dokunmadıysa).
+ *
  * Kapalıyken gövde `inert`: sekme sırasından ve erişilebilirlik ağacından
  * çıkar; ekran dışındaki girdilere odak kaçmaz.
  *
@@ -27,6 +31,7 @@ const OPEN_MIN_WIDTH = 1240;
  */
 export default function SideForm() {
   const [open, setOpen] = useState(false);
+  const touched = useRef(false);
   const [values, setValues] = useState({ name: "", org: "", email: "", consent: false, website: "" });
   const [error, setError] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -34,7 +39,24 @@ export default function SideForm() {
   const bodyId = `${uid}-body`;
 
   useEffect(() => {
-    if (window.innerWidth >= OPEN_MIN_WIDTH) setOpen(true);
+    if (window.innerWidth < OPEN_MIN_WIDTH) return;
+    const opener = document.getElementById(SECTIONS.acilis);
+    if (!opener) {
+      setOpen(true);
+      return;
+    }
+    // "Keşfedin" çapası videonun alt şeridini ekranda bırakır; çoğu
+    // çıktıysa yeterli sayılır.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry || entry.intersectionRatio >= 0.25) return;
+        observer.disconnect();
+        if (!touched.current) setOpen(true);
+      },
+      { threshold: [0, 0.25] },
+    );
+    observer.observe(opener);
+    return () => observer.disconnect();
   }, []);
 
   function set<K extends keyof typeof values>(key: K, value: (typeof values)[K]) {
@@ -91,7 +113,10 @@ export default function SideForm() {
       <button
         className="side-tab"
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          touched.current = true;
+          setOpen((v) => !v);
+        }}
         aria-expanded={open}
         aria-controls={bodyId}
       >

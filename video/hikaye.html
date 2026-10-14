@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<title>Verimx7 Hikâye Videosu</title>
+<!--
+  Verimx7 — 30 saniyelik hikâye videosu.
+
+  Atıl kaynaklar → iflas eden şirketler, mutsuz patronlar → Verimx7 mühendisleri
+  geliyor → konuşmalar, planlar → plan hayata geçiyor → paralar artıyor.
+
+  Her şey tek bir render(t) fonksiyonundan çizilir (t saniye). Tarayıcıda
+  açınca kendi kendine oynar; kayıt betiği (video/kaydet.mjs) ise her kareyi
+  t'yi elle ilerleterek yakalar, böylece video kare kare deterministiktir.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Figtree:wght@400;600;700&display=block" rel="stylesheet" />
+<style>
+  :root {
+    --navy: #09254c;
+    --navy-2: #0e3a76;
+    --accent: #1f6fd0;
+    --accent-300: #a3c8ef;
+    --accent-100: #eaf3fd;
+    --steel: #1c6186;
+    --gold: #f2b632;
+    --gold-dark: #b9801a;
+    --red: #d8342c;
+    --ink: #14202e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    background: var(--navy); font-family: "Figtree", system-ui, sans-serif; color: #fff;
+  }
+  .abs { position: absolute; }
+  .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; will-change: transform, opacity, filter; }
+  #shade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(90deg, rgba(9,37,76,.82) 0%, rgba(9,37,76,.45) 42%, rgba(9,37,76,0) 70%),
+      linear-gradient(0deg, rgba(9,37,76,.85) 0%, rgba(9,37,76,0) 55%);
+  }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 55% 45%, transparent 40%, rgba(0,0,0,.75) 100%); }
+  #grain { position: absolute; left: -64px; top: -64px; mix-blend-mode: overlay; pointer-events: none; }
+  #night { position: absolute; inset: 0; background: linear-gradient(135deg, #061a38, #0e3a76); opacity: 0; }
+
+  /* — metin bloğu — */
+  .txt { position: absolute; left: 120px; bottom: 132px; width: 1080px; opacity: 0; }
+  .txt .k {
+    font-family: "Baloo 2"; font-weight: 700; font-size: 30px; letter-spacing: .14em;
+    color: var(--accent-300); margin-bottom: 6px; display: inline-block;
+  }
+  .txt h1 {
+    font-family: "Baloo 2"; font-weight: 800; font-size: 104px; line-height: .98; margin: 0 0 22px;
+    text-shadow: 0 4px 28px rgba(0,0,0,.35);
+  }
+  .txt h1 .w { display: inline-block; white-space: pre; }
+  .txt p { font-size: 36px; line-height: 1.32; margin: 0; max-width: 900px; color: #dbe8f6; text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+
+  /* — üst köşeler — */
+  #hud {
+    position: absolute; left: 120px; top: 84px; display: flex; gap: 26px; align-items: center;
+    padding: 20px 30px 20px 22px; border-radius: 26px; transform-origin: 0 0;
+    background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.22);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  #hud svg { width: 104px; height: 104px; flex: none; }
+  .meters { display: grid; gap: 12px; width: 330px; }
+  .meter { display: grid; gap: 5px; font-size: 19px; font-weight: 600; color: #eaf3fd; }
+  .track { height: 12px; border-radius: 99px; background: rgba(255,255,255,.18); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; width: 0; }
+  #m0 { background: linear-gradient(90deg, #6ba3e0, #a3c8ef); }
+  #m1 { background: linear-gradient(90deg, #4fa3cb, #a7d3e9); }
+  #m2 { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); }
+
+  #mark {
+    position: absolute; right: 100px; top: 84px; display: flex; align-items: center; gap: 12px;
+    padding: 10px 26px 10px 12px; border-radius: 99px; background: #fff; color: var(--navy);
+    font-family: "Baloo 2"; font-weight: 800; font-size: 34px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  #mark img { width: 58px; height: 58px; object-fit: cover; object-position: 50% 30%; }
+
+  /* — yüz — */
+  .face circle.head { fill: #f6c445; stroke: #b9801a; stroke-width: 3; }
+  .face .eye { fill: #3a2a12; }
+  .face .brow, .face .mouth { fill: none; stroke: #3a2a12; stroke-width: 5; stroke-linecap: round; }
+  .face .tear { fill: #6ba3e0; }
+  .face .cheek { fill: #f08a5d; opacity: 0; }
+
+  /* — sahne 2 — */
+  #stamp {
+    position: absolute; left: 1170px; top: 190px; padding: 4px 40px; opacity: 0;
+    font-family: "Figtree"; font-weight: 700; font-size: 128px; letter-spacing: .08em; line-height: 1.05;
+    color: var(--red); border: 12px solid var(--red); border-radius: 22px;
+    background: rgba(255,255,255,.06); mix-blend-mode: screen; text-shadow: 0 0 1px var(--red);
+  }
+  #bigsad, #bighappy { position: absolute; opacity: 0; }
+  #bigsad { left: 1360px; top: 560px; width: 300px; height: 300px; }
+  #cloud { position: absolute; left: 1310px; top: 368px; width: 400px; height: 460px; opacity: 0; }
+
+  /* — sahne 3 — */
+  #wipe { position: absolute; top: -10%; left: 0; width: 140%; height: 120%; background: var(--accent); transform: translateX(-130%) skewX(-12deg); }
+  #wipe2 { position: absolute; top: -10%; left: 0; width: 140%; height: 120%; background: var(--navy-2); transform: translateX(-130%) skewX(-12deg); }
+  #wipelogo {
+    position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px;
+    border-radius: 60px; background: #fff; opacity: 0; display: grid; place-items: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,.3);
+  }
+  #wipelogo img { width: 330px; height: 330px; }
+  .eng { position: absolute; bottom: 120px; width: 150px; height: 300px; opacity: 0; }
+
+  /* — sahne 4 — */
+  .bubble {
+    position: absolute; padding: 26px 36px; border-radius: 36px; background: #fff; color: var(--ink);
+    font-size: 38px; font-weight: 700; opacity: 0; box-shadow: 0 18px 40px rgba(0,0,0,.25); white-space: nowrap;
+  }
+  .bubble::after { content: ""; position: absolute; bottom: -22px; width: 0; height: 0; border: 14px solid transparent; border-top: 22px solid #fff; }
+  .bubble.l::after { left: 48px; }
+  .bubble.r::after { right: 48px; }
+  .bubble.blue { background: var(--accent); color: #fff; }
+  .bubble.blue::after { border-top-color: var(--accent); }
+  #plan {
+    position: absolute; left: 1150px; top: 270px; width: 620px; padding: 40px 46px; border-radius: 34px;
+    background: #fff; color: var(--ink); opacity: 0; box-shadow: 0 26px 60px rgba(0,0,0,.3);
+  }
+  #plan h2 { font-family: "Baloo 2"; font-weight: 800; font-size: 54px; margin: 0 0 18px; color: var(--navy); }
+  .row { display: flex; align-items: center; gap: 20px; font-size: 36px; font-weight: 600; padding: 12px 0; border-top: 2px solid #e7eff6; }
+  .box { width: 48px; height: 48px; border-radius: 14px; border: 4px solid #adbfd0; display: grid; place-items: center; flex: none; }
+  .box svg { width: 34px; height: 34px; opacity: 0; }
+
+  /* — sahne 5 — */
+  .gear { position: absolute; opacity: 0; }
+  .chip {
+    position: absolute; display: flex; align-items: center; gap: 14px; padding: 16px 30px 16px 18px; border-radius: 99px;
+    background: #fff; color: var(--ink); font-size: 34px; font-weight: 700; opacity: 0; box-shadow: 0 14px 34px rgba(0,0,0,.25);
+  }
+  .chip i { width: 46px; height: 46px; border-radius: 50%; background: #1f9d55; display: grid; place-items: center; }
+
+  /* — sahne 6 — */
+  #chart { position: absolute; left: 1010px; top: 330px; width: 820px; height: 520px; opacity: 0; overflow: visible; }
+  #bighappy { width: 230px; height: 230px; }
+  #claim {
+    position: absolute; left: 1050px; top: 330px; opacity: 0; padding: 18px 30px; border-radius: 26px;
+    background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.3); backdrop-filter: blur(10px);
+  }
+  #claim b { display: block; font-family: "Baloo 2"; font-weight: 800; font-size: 96px; line-height: .95; color: var(--gold); }
+  #claim span { font-size: 26px; font-weight: 600; color: #eaf3fd; }
+  .coin {
+    position: absolute; left: 0; top: 0; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 35% 30%, #fff3c4 0%, #f7cd55 30%, #e3a52a 70%, #b9801a 100%);
+    border: 4px solid #c88f1f; color: #8a5a0c; font-family: "Baloo 2"; font-weight: 800; opacity: 0;
+    box-shadow: 0 8px 18px rgba(0,0,0,.3);
+  }
+  .spark { position: absolute; width: 46px; height: 46px; opacity: 0; }
+
+  /* — kapanış — */
+  #end { position: absolute; inset: 0; background: #fff; opacity: 0; color: var(--navy); }
+  #end img { position: absolute; left: 50%; top: 120px; width: 420px; height: 420px; margin-left: -210px; }
+  #end h2 {
+    position: absolute; left: 0; right: 0; top: 580px; margin: 0; text-align: center;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 82px; line-height: 1.02;
+  }
+  #end .url {
+    position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 40px; font-weight: 700; color: var(--accent);
+  }
+  #end .sub { position: absolute; left: 0; right: 0; top: 866px; text-align: center; font-size: 30px; color: #4a5c6d; }
+
+  /* ══ Dikey (9:16) yerleşim — hikaye.html?dikey ═══════════════════════
+     Aynı zaman çizelgesi; yalnızca konumlar dikey kadraja taşınır. Alt
+     ~200 px, Reels/Shorts arayüzünün altında kalmasın diye boş bırakılır. */
+  .v #stage { width: 1080px; height: 1920px; }
+  .v #shade {
+    background:
+      linear-gradient(0deg, rgba(9,37,76,.92) 0%, rgba(9,37,76,.55) 30%, rgba(9,37,76,0) 55%),
+      linear-gradient(180deg, rgba(9,37,76,.6) 0%, rgba(9,37,76,0) 22%);
+  }
+  .v .txt { left: 64px; bottom: 210px; width: 952px; }
+  .v .txt .k { font-size: 30px; }
+  .v .txt h1 { font-size: 92px; }
+  .v .txt p { font-size: 36px; }
+  .v #hud { left: 56px; top: 80px; transform-origin: 0 0; }
+  .v #mark { right: 56px; top: 96px; font-size: 30px; padding: 8px 22px 8px 10px; }
+  .v #mark img { width: 50px; height: 50px; }
+
+  .v #stamp { left: 170px; top: 430px; }
+  .v #cloud { left: 340px; top: 650px; }
+  .v #bigsad { left: 390px; top: 840px; }
+
+  .v .eng { width: 200px; height: 400px; bottom: 700px; }
+
+  .v #b0 { left: 80px !important; top: 470px !important; }
+  .v #b1 { left: 330px !important; top: 650px !important; }
+  .v #b2 { left: 110px !important; top: 830px !important; }
+  .v #plan { left: 110px; top: 470px; width: 860px; }
+
+  .v #g0 { left: 230px !important; top: 440px !important; width: 420px !important; height: 420px !important; }
+  .v #g1 { left: 600px !important; top: 740px !important; width: 270px !important; height: 270px !important; }
+  .v #c0 { left: 90px !important; top: 1050px !important; }
+  .v #c1 { left: 260px !important; top: 1150px !important; }
+  .v #c2 { left: 150px !important; top: 1250px !important; }
+
+  .v #chart { left: 80px; top: 640px; width: 920px; height: 583px; }
+  .v #claim { left: 80px; top: 420px; }
+
+  .v #end img { top: 360px; }
+  .v #end h2 { top: 840px; padding: 0 60px; font-size: 84px; }
+  .v #end .url { top: 1200px; }
+  .v #end .sub { top: 1268px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <img class="ph" id="p0" src="../public/img/atil_bina.jpg" alt="" />
+  <img class="ph" id="p1" src="../public/img/bos_fabrika.jpg" alt="" />
+  <img class="ph" id="p2" src="../public/img/analiz_ekrani.jpg" alt="" />
+  <img class="ph" id="p3" src="../public/img/toplanti.jpg" alt="" />
+  <img class="ph" id="p4" src="../public/img/beyaz_tahta.jpg" alt="" />
+  <img class="ph" id="p5" src="../public/img/uretim_hatti.jpg" alt="" />
+  <img class="ph" id="p6" src="../public/img/istanbul_levent.jpg" alt="" />
+  <div id="night"></div>
+  <div id="shade"></div>
+  <div id="vignette"></div>
+  <canvas id="grain" width="2048" height="1208"></canvas>
+
+  <!-- sahne 2: iflas damgası, mutsuz patron, yağmur bulutu -->
+  <div id="stamp">İFLAS</div>
+  <svg id="cloud" viewBox="0 0 400 460">
+    <g id="drops" stroke="#a3c8ef" stroke-width="5" stroke-linecap="round"></g>
+    <path d="M90 150 a60 60 0 0 1 60-70 a80 80 0 0 1 140 10 a55 55 0 0 1 30 105 H100 a50 50 0 0 1-10-45z" fill="#5f7386" />
+    <path d="M90 150 a60 60 0 0 1 60-70 a80 80 0 0 1 140 10 a55 55 0 0 1 30 105 H100 a50 50 0 0 1-10-45z" fill="#8397a9" transform="translate(0,-10)" />
+  </svg>
+  <svg id="bigsad" class="face" viewBox="0 0 100 100">
+    <circle class="head" cx="50" cy="50" r="46" />
+    <path class="brow" id="sb1" />
+    <path class="brow" id="sb2" />
+    <circle class="eye" cx="38" cy="47" r="4.5" />
+    <circle class="eye" cx="62" cy="47" r="4.5" />
+    <path class="mouth" id="sm" />
+    <path class="tear" id="tear" d="M66 54 q-4 7 0 10 q4-3 0-10z" />
+  </svg>
+
+  <!-- sahne 3: mühendisler -->
+  <div id="engs"></div>
+
+  <!-- sahne 4: konuşmalar ve plan -->
+  <div class="bubble l" id="b0" style="left:1130px; top:300px">Kayıp nerede?</div>
+  <div class="bubble r blue" id="b1" style="left:1330px; top:470px">Bu hat neden duruyor?</div>
+  <div class="bubble l" id="b2" style="left:1180px; top:640px">Boş kat gelir getirebilir!</div>
+  <div id="plan">
+    <h2>Plan</h2>
+    <div class="row"><span class="box" id="x0"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#1f9d55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Kaynak envanteri</div>
+    <div class="row"><span class="box" id="x1"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#1f9d55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Kayıp haritası</div>
+    <div class="row"><span class="box" id="x2"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#1f9d55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Aksiyon listesi</div>
+    <div class="row"><span class="box" id="x3"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#1f9d55" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Ölçüm formülü</div>
+  </div>
+
+  <!-- sahne 5: dişliler ve tamamlanan işler -->
+  <svg class="gear" id="g0" style="left:1300px; top:250px; width:360px; height:360px" viewBox="-50 -50 100 100"></svg>
+  <svg class="gear" id="g1" style="left:1590px; top:470px; width:230px; height:230px" viewBox="-50 -50 100 100"></svg>
+  <div class="chip" id="c0" style="left:1150px; top:690px"><i><svg width="30" height="30" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Makineler dönüyor</div>
+  <div class="chip" id="c1" style="left:1290px; top:790px"><i><svg width="30" height="30" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Boş alan işe yaradı</div>
+  <div class="chip" id="c2" style="left:1200px; top:890px"><i><svg width="30" height="30" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Ekip asıl işinde</div>
+
+  <div id="coins"></div>
+
+  <!-- sahne 6: yükselen eğri, para yağmuru, gülen patron -->
+  <svg id="chart" viewBox="0 0 820 520">
+    <defs>
+      <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#f2b632" stop-opacity=".55" />
+        <stop offset="1" stop-color="#f2b632" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    <g stroke="rgba(255,255,255,.14)" stroke-width="2">
+      <line x1="0" y1="130" x2="820" y2="130" /><line x1="0" y1="260" x2="820" y2="260" /><line x1="0" y1="390" x2="820" y2="390" />
+    </g>
+    <line x1="0" y1="510" x2="820" y2="510" stroke="rgba(255,255,255,.4)" stroke-width="3" />
+    <path id="areaPath" d="M0 490 C 140 486, 230 474, 330 430 S 560 250, 700 90 L 700 510 L 0 510 Z" fill="url(#area)" />
+    <path id="linePath" d="M0 490 C 140 486, 230 474, 330 430 S 560 250, 700 90" fill="none" stroke="#f2b632" stroke-width="10" stroke-linecap="round" />
+    <circle id="dot" r="16" fill="#fff" stroke="#f2b632" stroke-width="6" />
+  </svg>
+  <div id="claim"><b>%700</b><span>hedeflenen verim artışı</span></div>
+  <svg id="bighappy" class="face" viewBox="0 0 100 100">
+    <circle class="head" cx="50" cy="50" r="46" />
+    <path class="brow" d="M30 34 Q36 29 42 33" />
+    <path class="brow" d="M58 33 Q64 29 70 34" />
+    <path class="eye" d="M32 47 Q38 39 44 47" fill="none" stroke="#3a2a12" stroke-width="5" stroke-linecap="round" />
+    <path class="eye" d="M56 47 Q62 39 68 47" fill="none" stroke="#3a2a12" stroke-width="5" stroke-linecap="round" />
+    <circle class="cheek" cx="28" cy="60" r="7" style="opacity:.55" />
+    <circle class="cheek" cx="72" cy="60" r="7" style="opacity:.55" />
+    <path d="M30 60 Q50 92 70 60 Z" fill="#7a2e1a" stroke="#3a2a12" stroke-width="4" stroke-linejoin="round" />
+    <path d="M40 78 Q50 86 60 78 Q50 72 40 78Z" fill="#e8685a" />
+  </svg>
+  <div id="sparks"></div>
+
+  <!-- sahne metinleri -->
+  <div class="txt" id="t0"><span class="k">ÖNCE</span><h1>Atıl kaynaklar</h1><p>Harabeye dönmüş binalar, çöp yığınına dönen depolar, yıllardır dönmeyen makineler.</p></div>
+  <div class="txt" id="t1"><span class="k">SONRA</span><h1>İflas eden şirketler, mutsuz patronlar</h1><p>Sipariş azalıyor, borç büyüyor, gece uyku yok.</p></div>
+  <div class="txt" id="t2"><span class="k">DERKEN</span><h1>Verimx7 mühendisleri geliyor</h1><p>Sahaya iniyor, her binayı, her makineyi, her rolü envantere alıyorlar.</p></div>
+  <div class="txt" id="t3"><span class="k">MASADA</span><h1>Konuşmalar, planlar</h1><p>Her kayıp bir sahibe, her aksiyon bir tarihe, her hedef bir formüle bağlanıyor.</p></div>
+  <div class="txt" id="t4"><span class="k">SAHADA</span><h1>Plan hayata geçiyor</h1><p>Haftalık ritimle, ölçerek, adım adım.</p></div>
+  <div class="txt" id="t5"><span class="k">VE SONUNDA</span><h1>Paralar artıyor</h1><p>Kasa doluyor, patron gülüyor. Artış sizin sisteminizden ölçülüyor.</p></div>
+
+  <!-- sürekli gösterge ve marka -->
+  <div id="hud">
+    <svg class="face" viewBox="0 0 100 100">
+      <circle class="head" cx="50" cy="50" r="46" />
+      <path class="brow" id="hb1" />
+      <path class="brow" id="hb2" />
+      <circle class="eye" cx="38" cy="47" r="4.5" />
+      <circle class="eye" cx="62" cy="47" r="4.5" />
+      <path class="mouth" id="hm" />
+    </svg>
+    <div class="meters">
+      <div class="meter">Kullanılan kapasite<div class="track"><div class="fill" id="m0"></div></div></div>
+      <div class="meter">Patronun morali<div class="track"><div class="fill" id="m1"></div></div></div>
+      <div class="meter">Kasa<div class="track"><div class="fill" id="m2"></div></div></div>
+    </div>
+  </div>
+  <div id="mark"><img src="../public/logo-mark.png" alt="" />Verimx7</div>
+
+  <div id="wipe"></div>
+  <div id="wipe2"></div>
+  <div id="wipelogo"><img src="../public/logo-mark.png" alt="" /></div>
+
+  <div id="end">
+    <img src="../public/logo-mark.png" alt="" />
+    <h2 id="endh">Atıl kaynakları<br />stratejik güce dönüştürüyoruz</h2>
+    <div class="url">verimx7.com</div>
+    <div class="sub">5 günde teşhis raporu · Artış yoksa prim yok</div>
+  </div>
+</div>
+
+<script>
+const DURATION = 30;
+const VERTICAL = new URLSearchParams(location.search).has("dikey");
+if (VERTICAL) document.documentElement.classList.add("v");
+const W = VERTICAL ? 1080 : 1920;
+const $ = (id) => document.getElementById(id);
+
+/* ── yardımcılar ───────────────────────────────────────────────────── */
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, x) => a + (b - a) * x;
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const backOut = (x) => { const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+/** a–b aralığında görünür; girişte ve çıkışta yumuşak. */
+const win = (t, a, b, fi = 0.5, fo = 0.5) => Math.min(easeOut(seg(t, a, a + fi)), 1 - easeInOut(seg(t, b - fo, b)));
+/** Deterministik sözde rastgele. */
+const rnd = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+/* ── zaman çizelgesi ───────────────────────────────────────────────── */
+const SCENES = [
+  { a: 0.0, b: 5.0 },   // atıl kaynaklar
+  { a: 5.0, b: 9.8 },   // iflas, mutsuz patron
+  { a: 10.3, b: 14.2 }, // mühendisler geliyor
+  { a: 14.2, b: 19.2 }, // konuşmalar, planlar
+  { a: 19.2, b: 23.2 }, // hayata geçiyor
+  { a: 23.2, b: 27.5 }, // paralar artıyor
+];
+const END_AT = 27.5;
+
+const PHOTOS = [
+  { a: 0.0, b: 5.4, gloom: 1 },
+  { a: 4.8, b: 10.3, gloom: 1 },
+  { a: 10.1, b: 14.6, gloom: 0 },
+  { a: 14.0, b: 16.8, gloom: 0 },
+  { a: 16.4, b: 19.6, gloom: 0 },
+  { a: 19.0, b: 23.6, gloom: 0 },
+  { a: 23.0, b: 28.0, gloom: 0 },
+];
+
+/** Gösterge anahtar kareleri: [zaman, kapasite, moral, kasa, yüz]. */
+const KEYS = [
+  [0.0, 22, 30, 26, -0.5],
+  [5.4, 12, 6, 8, -1],
+  [10.6, 22, 32, 12, -0.2],
+  [16.6, 42, 60, 22, 0.35],
+  [19.6, 78, 80, 56, 0.75],
+  [24.4, 96, 98, 100, 1],
+];
+function keyed(t, col) {
+  let v = KEYS[0][col];
+  for (const k of KEYS) v = lerp(v, k[col], easeInOut(seg(t, k[0], k[0] + 1.2)));
+  return v;
+}
+
+const mouth = (m) => `M 34 66 Q 50 ${66 + m * 16} 66 66`;
+const brows = (m) => {
+  if (m < 0) {
+    const l = -m * 5;
+    return [`M 30 ${36 + l} L 42 ${36 - l}`, `M 58 ${36 - l} L 70 ${36 + l}`];
+  }
+  // Olumluda kaşlar kalkar ve kavislenir (içe eğik kaş "sinsi" okunuyordu).
+  const y = 36 - m * 4, c = y - m * 6;
+  return [`M 30 ${y} Q 36 ${c} 42 ${y}`, `M 58 ${y} Q 64 ${c} 70 ${y}`];
+};
+
+/* ── kurulum: kelimeler, mühendisler, dişliler, paralar ────────────── */
+document.querySelectorAll(".txt h1").forEach((h) => {
+  h.innerHTML = h.textContent.split(" ").map((w) => `<span class="w">${w} </span>`).join("");
+});
+
+const ENG_SVG = (shirt) => `
+<svg viewBox="0 0 150 300">
+  <ellipse cx="75" cy="292" rx="52" ry="8" fill="rgba(0,0,0,.35)"/>
+  <rect class="legL" x="48" y="200" width="22" height="88" rx="10" fill="#14202e"/>
+  <rect class="legR" x="80" y="200" width="22" height="88" rx="10" fill="#14202e"/>
+  <rect x="30" y="104" width="90" height="110" rx="30" fill="${shirt}"/>
+  <rect x="30" y="150" width="90" height="12" fill="#f2b632"/>
+  <rect x="92" y="120" width="44" height="58" rx="6" fill="#fff" stroke="#adbfd0" stroke-width="3" transform="rotate(12 114 149)"/>
+  <circle cx="75" cy="72" r="34" fill="#f1c9a0"/>
+  <path d="M38 66 a37 37 0 0 1 74 0 z" fill="#f2b632"/>
+  <rect x="32" y="62" width="86" height="10" rx="5" fill="#d99a1e"/>
+  <circle cx="64" cy="80" r="3.5" fill="#14202e"/><circle cx="86" cy="80" r="3.5" fill="#14202e"/>
+  <path d="M65 92 q10 7 20 0" stroke="#14202e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+</svg>`;
+const ENG_X = VERTICAL ? [40, 290, 540, 790] : [1130, 1300, 1470, 1640];
+const ENGS = [
+  { x: ENG_X[0], shirt: "#1f6fd0", d: 0.0 },
+  { x: ENG_X[1], shirt: "#1c6186", d: 0.25 },
+  { x: ENG_X[2], shirt: "#124a96", d: 0.5 },
+  { x: ENG_X[3], shirt: "#1f6fd0", d: 0.75 },
+];
+$("engs").innerHTML = ENGS.map((e, i) => `<div class="eng" id="e${i}">${ENG_SVG(e.shirt)}</div>`).join("");
+
+function gearPath(teeth, rOut, rIn, hole) {
+  let d = "";
+  const step = (Math.PI * 2) / teeth;
+  for (let i = 0; i < teeth; i++) {
+    const a = i * step;
+    const pts = [
+      [rIn, a], [rOut, a + step * 0.12], [rOut, a + step * 0.42], [rIn, a + step * 0.55],
+    ];
+    for (const [r, ang] of pts) d += `${d ? "L" : "M"}${(r * Math.cos(ang)).toFixed(2)} ${(r * Math.sin(ang)).toFixed(2)} `;
+  }
+  return `<path d="${d}Z" fill="currentColor"/><circle r="${hole}" fill="#09254c"/>`;
+}
+$("g0").innerHTML = gearPath(12, 48, 40, 13);
+$("g1").innerHTML = gearPath(9, 48, 38, 14);
+$("g0").style.color = "#eaf3fd";
+$("g1").style.color = "#f2b632";
+
+const COINS = Array.from({ length: 46 }, (_, i) => ({
+  x: rnd(i) * (W - 40),
+  delay: rnd(i + 99) * 2.6,
+  speed: 520 + rnd(i + 7) * 520,
+  size: 54 + rnd(i + 3) * 46,
+  spin: 2 + rnd(i + 11) * 5,
+  sway: rnd(i + 5) * Math.PI * 2,
+}));
+$("coins").innerHTML = COINS.map((c, i) => `<div class="coin" id="k${i}" style="width:${c.size}px;height:${c.size}px;font-size:${c.size * 0.55}px">₺</div>`).join("");
+
+const SPARKS = Array.from({ length: 7 }, (_, i) => ({ ang: (i / 7) * Math.PI * 2 + 0.3, r: 150 + rnd(i + 40) * 40, ph: rnd(i + 60) }));
+$("sparks").innerHTML = SPARKS.map((_, i) => `<svg class="spark" id="s${i}" viewBox="-10 -10 20 20"><path d="M0-10 L2.2-2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2-2.2Z" fill="#fff3c4"/></svg>`).join("");
+
+$("drops").innerHTML = Array.from({ length: 16 }, (_, i) => `<line id="d${i}" x1="0" y1="0" x2="-6" y2="26"/>`).join("");
+
+/* Film greni: bir kez üretilir, her karede kaydırılır. */
+(() => {
+  const c = $("grain");
+  if (VERTICAL) { c.width = 1208; c.height = 2048; }
+  const g = c.getContext("2d");
+  const img = g.createImageData(c.width, c.height);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = (rnd(i * 0.37) * 255) | 0;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+})();
+
+const lineLen = $("linePath").getTotalLength();
+$("linePath").style.strokeDasharray = lineLen;
+
+/* ── çizim ─────────────────────────────────────────────────────────── */
+function render(t) {
+  /* Fotoğraflar: Ken Burns + atıl sahnelerde solgun renk. */
+  PHOTOS.forEach((p, i) => {
+    const el = $("p" + i);
+    el.style.opacity = win(t, p.a, p.b, i === 0 ? 0.01 : 0.6, 0.6);
+    const z = lerp(1.04, 1.16, seg(t, p.a, p.b));
+    el.style.transform = `scale(${z}) translateX(${lerp(10, -10, seg(t, p.a, p.b))}px)`;
+    el.style.filter = p.gloom
+      ? "grayscale(.9) sepia(.18) brightness(.6) contrast(1.15)"
+      : "saturate(1.12) brightness(.9)";
+  });
+  const gloom = 1 - seg(t, 9.9, 10.3);
+  $("vignette").style.opacity = lerp(0.35, 1, gloom);
+  $("grain").style.opacity = lerp(0.05, 0.2, gloom);
+  $("grain").style.transform = `translate(${(rnd(Math.floor(t * 30)) * 64) | 0}px, ${(rnd(Math.floor(t * 30) + 5) * 64) | 0}px)`;
+
+  /* Ekran sarsıntısı: damga vurduğunda. */
+  const sh = seg(t, 5.95, 6.4);
+  const amp = sh > 0 && sh < 1 ? (1 - sh) * 14 : 0;
+  $("stage").style.transform = amp ? `translate(${Math.sin(t * 90) * amp}px, ${Math.cos(t * 77) * amp}px)` : "";
+
+  /* Sahne metinleri: kelime kelime yükselir. */
+  SCENES.forEach((s, i) => {
+    const el = $("t" + i);
+    const out = easeInOut(seg(t, s.b - 0.45, s.b));
+    el.style.opacity = t < s.a || t > s.b ? 0 : 1 - out;
+    el.style.transform = `translateY(${-out * 30}px)`;
+    const k = el.querySelector(".k");
+    const kin = easeOut(seg(t, s.a + 0.15, s.a + 0.6));
+    k.style.opacity = kin;
+    k.style.transform = `translateX(${(1 - kin) * -30}px)`;
+    el.querySelectorAll(".w").forEach((w, j) => {
+      const x = seg(t, s.a + 0.3 + j * 0.09, s.a + 0.85 + j * 0.09);
+      w.style.opacity = easeOut(x);
+      w.style.transform = `translateY(${(1 - backOut(x)) * 60}px)`;
+    });
+    const p = el.querySelector("p");
+    const pin = easeOut(seg(t, s.a + 0.9, s.a + 1.5));
+    p.style.opacity = pin;
+    p.style.transform = `translateY(${(1 - pin) * 24}px)`;
+  });
+
+  /* Gösterge paneli. */
+  const hudOn = win(t, 0.6, END_AT, 0.6, 0.4);
+  $("hud").style.opacity = hudOn;
+  $("hud").style.transform = `translateY(${(1 - hudOn) * -20}px)`;
+  $("m0").style.width = keyed(t, 1) + "%";
+  $("m1").style.width = keyed(t, 2) + "%";
+  $("m2").style.width = keyed(t, 3) + "%";
+  const mood = keyed(t, 4);
+  $("hm").setAttribute("d", mouth(mood));
+  const [b1, b2] = brows(mood);
+  $("hb1").setAttribute("d", b1);
+  $("hb2").setAttribute("d", b2);
+  $("mark").style.opacity = win(t, 0.3, END_AT, 0.6, 0.4);
+
+  /* Sahne 2: İFLAS damgası, mutsuz patron, yağmur. */
+  const st = seg(t, 5.7, 5.98);
+  $("stamp").style.opacity = t < 5.7 ? 0 : st * (1 - seg(t, 9.4, 9.8));
+  $("stamp").style.transform = `rotate(-11deg) scale(${lerp(2.4, 1, easeOut(st))})`;
+  const sad = win(t, 6.5, 9.8, 0.5, 0.4);
+  const sadPop = backOut(seg(t, 6.5, 7.1));
+  $("bigsad").style.opacity = sad;
+  $("bigsad").style.transform = `scale(${lerp(0.4, 1, sadPop)}) rotate(${Math.sin(t * 2.2) * 3}deg)`;
+  $("sm").setAttribute("d", mouth(-1));
+  const [sb1, sb2] = brows(-1);
+  $("sb1").setAttribute("d", sb1);
+  $("sb2").setAttribute("d", sb2);
+  const tearY = ((t - 7) * 26) % 30;
+  $("tear").setAttribute("transform", `translate(0 ${t > 7 ? tearY : 0})`);
+  $("tear").style.opacity = t > 7 ? 1 - tearY / 30 : 0;
+  const cl = win(t, 7.0, 9.8, 0.5, 0.4);
+  $("cloud").style.opacity = cl;
+  $("cloud").style.transform = `translateY(${(1 - easeOut(seg(t, 7.0, 7.6))) * -60}px)`;
+  for (let i = 0; i < 16; i++) {
+    const x = 105 + (i % 8) * 28 + (i > 7 ? 14 : 0);
+    const y = 205 + (((t * 420 + rnd(i) * 240) % 240));
+    const d = $("d" + i);
+    d.setAttribute("x1", x); d.setAttribute("y1", y);
+    d.setAttribute("x2", x - 6); d.setAttribute("y2", y + 26);
+    d.style.opacity = y > 300 ? 0 : 0.9;
+  }
+
+  /* Sahne 3: mavi perde, logo, mühendisler yürüyerek geliyor. */
+  $("wipe").style.transform = `translateX(${lerp(-130, 0, easeInOut(seg(t, 9.55, 9.95))) + lerp(0, 130, easeInOut(seg(t, 10.45, 10.85)))}%) skewX(-12deg)`;
+  $("wipe2").style.transform = `translateX(${lerp(-130, 0, easeInOut(seg(t, 9.65, 10.05))) + lerp(0, 130, easeInOut(seg(t, 10.4, 10.8)))}%) skewX(-12deg)`;
+  const lg = seg(t, 9.9, 10.25);
+  $("wipelogo").style.opacity = t < 9.9 ? 0 : lg * (1 - seg(t, 10.35, 10.55));
+  $("wipelogo").style.transform = `scale(${lerp(0.5, 1, backOut(lg)) + seg(t, 10.35, 10.55) * 0.2}) rotate(${lerp(-8, 0, easeOut(lg))}deg)`;
+  ENGS.forEach((e, i) => {
+    const el = $("e" + i);
+    const w = seg(t, 10.6 + e.d, 11.9 + e.d);
+    const x = lerp(e.x + 700, e.x, easeOut(w));
+    const walking = w > 0 && w < 1;
+    const bob = walking ? Math.abs(Math.sin(t * 14 + i)) * -12 : Math.sin(t * 3 + i) * -3;
+    el.style.left = x + "px";
+    el.style.opacity = t < 10.6 + e.d ? 0 : 1 - seg(t, 13.8, 14.2);
+    el.style.transform = `translateY(${bob}px)`;
+    const swing = walking ? Math.sin(t * 14 + i) * 8 : 0;
+    el.querySelector(".legL").setAttribute("transform", `rotate(${swing} 59 200)`);
+    el.querySelector(".legR").setAttribute("transform", `rotate(${-swing} 91 200)`);
+  });
+
+  /* Sahne 4: konuşma balonları, sonra plan kâğıdı. */
+  [14.5, 15.0, 15.5].forEach((a, i) => {
+    const el = $("b" + i);
+    const p = seg(t, a, a + 0.45);
+    el.style.opacity = t < a ? 0 : p * (1 - seg(t, 16.2, 16.5));
+    el.style.transform = `scale(${lerp(0.3, 1, backOut(p))}) translateY(${Math.sin(t * 2.4 + i) * 6}px)`;
+    el.style.transformOrigin = i === 1 ? "90% 100%" : "10% 100%";
+  });
+  const pl = seg(t, 16.4, 16.9);
+  $("plan").style.opacity = t < 16.4 ? 0 : pl * (1 - seg(t, 18.9, 19.25));
+  $("plan").style.transform = `translateY(${(1 - easeOut(pl)) * 80}px) rotate(${lerp(4, -1.5, easeOut(pl))}deg)`;
+  [17.0, 17.4, 17.8, 18.2].forEach((a, i) => {
+    const p = seg(t, a, a + 0.25);
+    const box = $("x" + i);
+    box.querySelector("svg").style.opacity = p;
+    box.querySelector("svg").style.transform = `scale(${lerp(0.2, 1, backOut(p))})`;
+    box.style.borderColor = p > 0 ? "#1f9d55" : "#adbfd0";
+  });
+
+  /* Sahne 5: dişliler döner, işler tamamlanır. */
+  const ge = win(t, 19.4, 23.2, 0.5, 0.4);
+  $("g0").style.opacity = ge;
+  $("g1").style.opacity = ge;
+  const spin = Math.max(0, t - 19.4);
+  $("g0").style.transform = `scale(${lerp(0.6, 1, backOut(seg(t, 19.4, 19.9)))}) rotate(${spin * 70}deg)`;
+  $("g1").style.transform = `scale(${lerp(0.6, 1, backOut(seg(t, 19.5, 20.0)))}) rotate(${-spin * 93 + 20}deg)`;
+  [20.3, 20.9, 21.5].forEach((a, i) => {
+    const p = seg(t, a, a + 0.4);
+    const el = $("c" + i);
+    el.style.opacity = t < a ? 0 : p * (1 - seg(t, 22.8, 23.2));
+    el.style.transform = `translateX(${(1 - backOut(p)) * 120}px)`;
+  });
+
+  /* Sahne 6: gece mavisi zemin, yükselen eğri, gülen patron, para yağmuru. */
+  $("night").style.opacity = seg(t, 23.0, 23.6) * 0.82;
+  const ch = win(t, 23.4, END_AT + 0.2, 0.4, 0.4);
+  $("chart").style.opacity = ch;
+  const dr = easeInOut(seg(t, 23.7, 25.6));
+  $("linePath").style.strokeDashoffset = lineLen * (1 - dr);
+  $("areaPath").style.opacity = dr;
+  const pt = $("linePath").getPointAtLength(lineLen * dr);
+  $("dot").setAttribute("cx", pt.x);
+  $("dot").setAttribute("cy", pt.y);
+  const hp = seg(t, 25.4, 25.95);
+  const happyOn = t < 25.4 ? 0 : hp * (1 - seg(t, END_AT - 0.2, END_AT + 0.2));
+  $("bighappy").style.opacity = happyOn;
+  // Eğrinin tepesine oturur.
+  const cb = VERTICAL ? { x: 80, y: 640, k: 920 / 820 } : { x: 1010, y: 330, k: 1 };
+  const hx = cb.x + 700 * cb.k - 115, hy = cb.y + 90 * cb.k - 255;
+  $("bighappy").style.left = hx + "px";
+  $("bighappy").style.top = hy + "px";
+  $("bighappy").style.transform = `scale(${lerp(0.2, 1, backOut(hp))}) rotate(${Math.sin(t * 5) * 6}deg)`;
+  SPARKS.forEach((s, i) => {
+    const el = $("s" + i);
+    const tw = (Math.sin((t * 5 + s.ph * 6)) + 1) / 2;
+    el.style.opacity = happyOn * tw;
+    el.style.left = hx + 115 + Math.cos(s.ang) * s.r - 23 + "px";
+    el.style.top = hy + 115 + Math.sin(s.ang) * s.r - 23 + "px";
+    el.style.transform = `scale(${0.5 + tw * 0.8}) rotate(${t * 60}deg)`;
+  });
+  const cm = seg(t, 25.9, 26.35);
+  $("claim").style.opacity = t < 25.9 ? 0 : cm * (1 - seg(t, END_AT - 0.2, END_AT + 0.2));
+  $("claim").style.transform = `scale(${lerp(0.5, 1, backOut(cm))})`;
+  $("claim").style.transformOrigin = "0 0";
+  const rainOn = 1 - seg(t, END_AT - 0.1, END_AT + 0.3);
+  // Sahne 6 metninin kapladığı alan (sahne koordinatında, sarsıntısız).
+  const textBox = (render.textBox ??= (() => {
+    const st = $("stage").getBoundingClientRect();
+    const h = $("t5").querySelector("h1").getBoundingClientRect();
+    const p = $("t5").querySelector("p").getBoundingClientRect();
+    return { left: h.left - st.left, top: h.top - st.top, right: Math.max(h.right, p.right) - st.left, bottom: p.bottom - st.top };
+  })());
+  COINS.forEach((c, i) => {
+    const el = $("k" + i);
+    const local = t - 24.3 - c.delay;
+    if (local < 0 || rainOn <= 0) { el.style.opacity = 0; return; }
+    const span = (VERTICAL ? 1920 : 1080) + 260;
+    const y = -160 + ((local * c.speed) % span);
+    const x = c.x + Math.sin(local * 2 + c.sway) * 30;
+    // Metin bloğunun arkasına düşen paralar solar; yazı okunur kalır.
+    const cx = x + c.size / 2, cy = y + c.size / 2;
+    const inText = cx > textBox.left - 30 && cx < textBox.right + 30 && cy > textBox.top - 30 && cy < textBox.bottom + 30;
+    el.style.opacity = rainOn * (inText ? 0.18 : 1);
+    el.style.transform = `translate(${x}px, ${y}px) rotate(${Math.sin(local * 3 + c.sway) * 25}deg) scaleX(${Math.cos(local * c.spin)})`;
+  });
+
+  /* Kapanış kartı. */
+  const en = seg(t, END_AT, END_AT + 0.5);
+  $("end").style.opacity = easeOut(en);
+  const li = seg(t, END_AT + 0.2, END_AT + 0.9);
+  $("end").querySelector("img").style.transform = `scale(${lerp(0.6, 1, backOut(li))})`;
+  $("end").querySelector("img").style.opacity = li;
+  const hi = easeOut(seg(t, END_AT + 0.6, END_AT + 1.2));
+  $("endh").style.opacity = hi;
+  $("endh").style.transform = `translateY(${(1 - hi) * 40}px)`;
+  const ui = easeOut(seg(t, END_AT + 1.0, END_AT + 1.5));
+  $("end").querySelector(".url").style.opacity = ui;
+  $("end").querySelector(".sub").style.opacity = ui;
+}
+
+/* Kayıt betiği bu sözü bekler: yazı tipleri ve görseller hazır. */
+window.ready = Promise.all([
+  document.fonts.ready,
+  ...[...document.images].map((im) => im.decode().catch(() => {})),
+]);
+window.render = render;
+window.DURATION = DURATION;
+window.SIZE = { width: W, height: VERTICAL ? 1920 : 1080 };
+
+/* Tarayıcıda açıldığında kendi kendine döngüde oynat (?t=12 ile o kareye kilitlenir). */
+const fixed = new URLSearchParams(location.search).get("t");
+if (!navigator.webdriver) {
+  window.ready.then(() => {
+    if (fixed !== null) return render(Number(fixed));
+    const t0 = performance.now();
+    const loop = (now) => { render(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  });
+} else {
+  render(0);
+}
+</script>
+</body>
+</html>

@@ -20,3 +20,7 @@ tsconfig.tsbuildinfo
 # kişisel bir sertifika var; bunlar kod deposunda saklanmaz.
 # Mimari-Plan.md'ye koddaki yorumlardan atıf yapılıyor ama içeriği de gizli.
 belgeler/
+
+# Hikâye videosunun ana kayıtları (100 MB+). Sitede public/video/ altındaki
+# web kodlamaları kullanılır; bunlar video/kaydet.mjs ile yeniden üretilir.
+video/*.mp4

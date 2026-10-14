@@ -814,6 +814,33 @@ textarea.input {
   box-shadow: var(--shadow-md);
 }
 
+/* ── hikâye videosu: genişte 16:9, darda 9:16 ─────────────────────────── */
+.story-video {
+  margin: 0;
+}
+.story-video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-900);
+  box-shadow: var(--shadow-md);
+}
+.story-video .story-video-dikey {
+  display: none;
+}
+@media (max-width: 720px) {
+  .story-video .story-video-yatay {
+    display: none;
+  }
+  /* Dikey video ekranın boyunu aşmasın; yapışkan menüye yer kalsın. */
+  .story-video .story-video-dikey {
+    display: block;
+    width: min(100%, calc((100svh - 120px) * 9 / 16));
+    margin-inline: auto;
+  }
+}
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

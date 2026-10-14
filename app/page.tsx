@@ -12,6 +12,7 @@ import ReportPreview from "@/components/ReportPreview";
 import SideForm from "@/components/SideForm";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNav from "@/components/SiteNav";
+import StoryVideo from "@/components/StoryVideo";
 import { quickEstimate } from "@/lib/engine";
 import { QUICK_LIMITS } from "@/lib/form-constants";
 import { BRAND, CLAIMS, ROUTES, SECTIONS, SITE_URL } from "@/lib/site";
@@ -257,20 +258,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Geniş bant görsel ─────────────────────────────────────── */}
+        {/* ── Hikâye videosu ────────────────────────────────────────── */}
         <section className="lp-sec" style={{ paddingTop: 0, paddingBottom: 0 }}>
-          <div
-            className="washed"
-            style={{ position: "relative", height: 380, borderRadius: "var(--radius-lg)", overflow: "hidden" }}
-          >
-            <Image
-              src="/img/bos_fabrika.jpg"
-              alt="Tavanı ışıklıklı, bomboş ve geniş bir fabrika holü"
-              fill
-              sizes="(max-width: 1200px) 100vw, 1120px"
-              style={{ objectFit: "cover" }}
-            />
-          </div>
+          <StoryVideo />
         </section>
 
         {/* ── Değer önerisi ─────────────────────────────────────────── */}

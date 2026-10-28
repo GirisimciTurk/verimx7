@@ -9,6 +9,12 @@
   var ANAHTAR = "bayram-29-ekim-2026-goruldu";
   var KOK = "/bayram/";
 
+  // Yalnız 29 Ekim 2026 günü (Türkiye saati, UTC+3) gösterilir; 30 Ekim'de kendiliğinden kapanır.
+  var BASLA = Date.UTC(2026, 9, 28, 21, 0, 0); // 29.10.2026 00:00 TSİ
+  var BITIS = Date.UTC(2026, 9, 29, 21, 0, 0); // 30.10.2026 00:00 TSİ
+  var simdi = Date.now();
+  if (simdi < BASLA || simdi >= BITIS) return;
+
   // Otomasyon tarayıcıları (Playwright e2e testleri) pencereye takılmasın.
   if (navigator.webdriver) return;
 

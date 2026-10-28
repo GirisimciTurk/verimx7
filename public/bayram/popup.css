@@ -1,0 +1,65 @@
+/* 29 Ekim karşılama penceresi — bkz. popup.js */
+.bayram29-perde {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 0, 0, 0.78);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.bayram29-perde.bayram29-acik {
+  opacity: 1;
+}
+.bayram29-kutu {
+  position: relative;
+  max-width: min(92vw, 520px);
+  transform: scale(0.96);
+  transition: transform 0.25s ease;
+}
+.bayram29-acik .bayram29-kutu {
+  transform: scale(1);
+}
+.bayram29-gorsel {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.bayram29-kapat {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font: 400 28px/40px system-ui, sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+.bayram29-kapat:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+.bayram29-kapat:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bayram29-perde,
+  .bayram29-kutu {
+    transition: none;
+  }
+}

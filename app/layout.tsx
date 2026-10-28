@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Figtree } from "next/font/google";
+import Script from "next/script";
 
 import "./globals.css";
 import {
@@ -146,6 +147,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify([organizationJsonLd, websiteJsonLd]),
           }}
         />
+        <Script src="/bayram/popup.js" strategy="afterInteractive" />
       </body>
     </html>
   );
